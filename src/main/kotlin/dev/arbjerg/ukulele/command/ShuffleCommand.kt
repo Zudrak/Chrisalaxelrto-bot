@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component
 @Component
 class ShuffleCommand : Command("shuffle") {
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         player.shuffle()
         reply("This list has been shuffled.")
     }

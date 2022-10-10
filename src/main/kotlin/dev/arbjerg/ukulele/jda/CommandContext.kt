@@ -64,6 +64,10 @@ class CommandContext(
         channel.sendMessage(help.buildMessage()).queue()
     }
 
+    fun replyWrongMusicChannel() {
+        replyTTS("You fucking idiot, go to the correct channel next time.")
+    }
+
     fun handleException(t: Throwable) {
         command.log.error("Handled exception occurred", t)
         reply("An exception occurred!\n`${t.message}`")

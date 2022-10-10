@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component
 @Component
 class SkipCommand : Command("skip", "s") {
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         when {
             argumentText.isBlank() -> skipNext()
             argumentText.toIntOrNull() != null -> skipIndex(argumentText.toInt())

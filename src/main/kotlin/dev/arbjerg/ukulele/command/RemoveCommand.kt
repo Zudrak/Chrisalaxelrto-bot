@@ -8,6 +8,9 @@ import java.util.regex.Pattern
 @Component
 class RemoveCommand : Command("remove", "del", "rem") {
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         val pattern = Pattern.compile("(|-)\\d+")
         val matcher = pattern.matcher(argumentText)
 

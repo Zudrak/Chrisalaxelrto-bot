@@ -47,7 +47,8 @@ class GuildPropertiesService(private val repo: GuildPropertiesRepository) {
 data class GuildProperties(
         @Id val guildId: Long,
         var volume: Int = 100,
-        var prefix: String? = null
+        var prefix: String? = null,
+        var musicChannel: String? = null
 ) : Persistable<Long> {
     @Transient var new: Boolean = false
     override fun getId() = guildId

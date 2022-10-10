@@ -10,6 +10,9 @@ import java.util.regex.Pattern
 class SeekCommand : Command ("seek") {
 
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         val track = player.tracks.firstOrNull() ?: return reply("Not playing anything.")
 
         if (!track.isSeekable)

@@ -17,6 +17,9 @@ class QueueCommand(
     private val pageSize = 10
 
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         reply(printQueue(player, argumentText.toIntOrNull() ?: 1))
     }
 

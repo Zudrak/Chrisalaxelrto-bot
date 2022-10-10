@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component
 @Component
 class MoveCommand : Command("move", "m") {
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         val pattern = Pattern.compile("(|-)\\d+ (|-)\\d+")
         val matcher = pattern.matcher(argumentText)
 

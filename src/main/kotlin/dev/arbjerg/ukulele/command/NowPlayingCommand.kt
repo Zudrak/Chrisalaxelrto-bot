@@ -16,6 +16,9 @@ import java.awt.Color
 class NowPlayingCommand : Command ("nowplaying", "np") {
 
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         if (player.tracks.isEmpty())
             return reply("Not playing anything.")
 

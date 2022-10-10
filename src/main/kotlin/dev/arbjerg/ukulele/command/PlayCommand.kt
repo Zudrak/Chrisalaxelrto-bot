@@ -21,6 +21,9 @@ class PlayCommand(
         val botProps: BotProps
 ) : Command("play", "p") {
     override suspend fun CommandContext.invoke() {
+
+        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+
         if (!ensureVoiceChannel()) return
 
         var identifier = argumentText

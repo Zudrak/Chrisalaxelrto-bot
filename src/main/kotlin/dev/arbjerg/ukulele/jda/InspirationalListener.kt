@@ -82,12 +82,6 @@ class InspirationalListener(
         }
     }
 
-    override fun onGuildVoiceMove(event: GuildVoiceMoveEvent){
-        if (!event.member.user.isBot) {
-            isAlone(event.channelLeft, event.guild)
-        }
-    }
-
     fun isAlone(channel: VoiceChannel, guild: Guild){
         val users = channel.members.filter{ member -> !member.user.isBot() }
         if ( users.isEmpty() ){

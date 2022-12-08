@@ -12,6 +12,5 @@ class BotProps(
         var trackDurationLimit: Int = 0,
         var announceTracks: Boolean = false,
         var azureToken: String = "",
-        var azureEndpoint: String = "",
-        var musicChannel: String = ""
+        var azureEndpoint: String = ""
 )

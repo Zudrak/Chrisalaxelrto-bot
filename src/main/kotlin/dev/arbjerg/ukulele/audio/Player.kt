@@ -135,6 +135,9 @@ class Player(val beans: Beans, guildProperties: GuildProperties) : AudioEventAda
     }
 
     fun move(originalPos : Int, targetPos : Int) {
+        if (originalPos == targetPos){
+            return
+        }
         val playingTrack = player.playingTrack != null
 
         if(playingTrack){
@@ -157,6 +160,10 @@ class Player(val beans: Beans, guildProperties: GuildProperties) : AudioEventAda
             queue.add(targetPos, originalTrack.makeClone())
         }
 
+    }
+
+    fun queueSize(): Int {
+        return queue.tracks.size
     }
 
     override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {

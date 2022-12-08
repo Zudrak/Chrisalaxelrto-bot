@@ -1,20 +1,22 @@
 package dev.arbjerg.ukulele.jda
 
+import dev.arbjerg.ukulele.audio.Player
+import dev.arbjerg.ukulele.audio.PlayerRegistry
 import dev.arbjerg.ukulele.config.BotProps
-import dev.arbjerg.ukulele.data.GuildProperties
 import dev.arbjerg.ukulele.data.GuildPropertiesService
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.MessageBuilder
+import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.VoiceChannel
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import reactor.kotlin.core.publisher.toMono
 import java.util.*
 import kotlin.concurrent.scheduleAtFixedRate
 
@@ -76,12 +78,22 @@ class InspirationalListener(
 
     override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent){
         if (!event.member.user.isBot) {
-            val channel = event.channelLeft
-            if ( channel.members.isEmpty() || (channel.members.size == 1 && channel.members[0].user.isBot()) ){
-                log.info("Stopped scheduler for inspiration")
-                task?.cancel()
-                task = null
-            }
+            isAlone(event.channelLeft, event.guild)
+        }
+    }
+
+    override fun onGuildVoiceMove(event: GuildVoiceMoveEvent){
+        if (!event.member.user.isBot) {
+            isAlone(event.channelLeft, event.guild)
+        }
+    }
+
+    fun isAlone(channel: VoiceChannel, guild: Guild){
+        val users = channel.members.filter{ member -> !member.user.isBot() }
+        if ( users.isEmpty() && guild.audioManager.connectedChannel == channel ){
+            log.info("Stopped scheduler for inspiration")
+            task?.cancel()
+            task = null
         }
     }
 

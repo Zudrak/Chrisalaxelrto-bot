@@ -90,7 +90,7 @@ class InspirationalListener(
 
     fun isAlone(channel: VoiceChannel, guild: Guild){
         val users = channel.members.filter{ member -> !member.user.isBot() }
-        if ( users.isEmpty() && guild.audioManager.connectedChannel == channel ){
+        if ( users.isEmpty() ){
             log.info("Stopped scheduler for inspiration")
             task?.cancel()
             task = null

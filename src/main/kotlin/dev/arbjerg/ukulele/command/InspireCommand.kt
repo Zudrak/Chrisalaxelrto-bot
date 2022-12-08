@@ -70,10 +70,16 @@ class InspireCommand(
             ctx.reply("Have some inspiration")
             val queueSize = player.queueSize()
             player.move(queueSize, 0)
+            var volume = player.volume
+            val duration = player.tracks[0].duration
+            player.volume = 300
+
+            timer.schedule(duration) {
+                player.volume = volume
+            }
 
             if(player.isRepeating) {
                 player.isRepeating = false
-                val duration = player.tracks[0].duration
                 timer.schedule(duration+2000) {
                     player.isRepeating = true
                 }

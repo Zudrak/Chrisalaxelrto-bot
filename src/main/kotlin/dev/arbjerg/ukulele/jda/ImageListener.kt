@@ -108,7 +108,7 @@ class ImageListener(botProps: BotProps) : ListenerAdapter() {
                         text = text.replace("-"," ")
                         val re = Regex("[^A-Za-z ]")
                         text = re.replace(text, "") // works
-                        val msg = MessageBuilder().append("wow is that an animated $text").setTTS(true).build()
+                        val msg = MessageBuilder().append("wow is that an animated $text").build()
                         channel.sendMessage(msg).queue()
                     }
                 }

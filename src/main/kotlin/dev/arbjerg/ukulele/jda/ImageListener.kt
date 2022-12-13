@@ -86,7 +86,7 @@ class ImageListener(botProps: BotProps) : ListenerAdapter() {
         val selectedWording = artWording[Random.nextInt(artWording.size - 1)]
         val description = selectedWording.format(describeRemoteImage(url))
         log.info("Trying to understand art from ${message.contentRaw}")
-        val msg = MessageBuilder().append(description).setTTS(true).build()
+        val msg = MessageBuilder().append(description).build()
         channel.sendMessage(msg).queue()
     }
 

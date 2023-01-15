@@ -88,6 +88,7 @@ class InspirationalListener(
     fun buildTask(channelJoined: VoiceChannel, guild: Guild, member: Member){
         log.info("Started scheduler for inspiration")
         taskChannel = channelJoined
+        task?.cancel()
         task = timer.scheduleAtFixedRate(0, 120000) {
             val rng = (1..100).random()
             if (rng <= 1) {

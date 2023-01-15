@@ -48,6 +48,7 @@ class InspirationalListener(
 
     override fun onGuildVoiceJoin(event: GuildVoiceJoinEvent) {
         if (!event.member.user.isBot) {
+            task?.cancel()
             if(event.channelJoined != taskChannel) task = null
             if (task == null) buildTask(event.channelJoined, event.guild, event.member)
         }
@@ -55,6 +56,7 @@ class InspirationalListener(
 
     override fun onGuildVoiceMove(event: GuildVoiceMoveEvent) {
         if(!event.member.user.isBot){
+            task?.cancel()
             if(event.channelJoined != taskChannel) task = null
             if(task == null) buildTask(event.channelJoined, event.guild, event.member)
         }
@@ -88,7 +90,6 @@ class InspirationalListener(
     fun buildTask(channelJoined: VoiceChannel, guild: Guild, member: Member){
         log.info("Started scheduler for inspiration")
         taskChannel = channelJoined
-        task?.cancel()
         task = timer.scheduleAtFixedRate(0, 120000) {
             val rng = (1..100).random()
             if (rng <= 1) {

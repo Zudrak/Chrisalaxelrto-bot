@@ -1,5 +1,8 @@
 package dev.arbjerg.ukulele.jda
 
+import dev.arbjerg.ukulele.data.GuildPropertiesService
+import dev.arbjerg.ukulele.data.MessageRepliesService
+import dev.arbjerg.ukulele.data.MessageTriggersService
 import dev.arbjerg.ukulele.data.Replies
 import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.events.ReadyEvent
@@ -13,7 +16,7 @@ import kotlin.random.Random
 
 
 @Service
-class ReplyListener() : ListenerAdapter() {
+class ReplyListener(val messageRepliesService: MessageRepliesService, messageTriggersService: MessageTriggersService) : ListenerAdapter() {
     private val replies: Replies = Replies()
 
     private val log: Logger = LoggerFactory.getLogger(EventHandler::class.java)
@@ -26,26 +29,33 @@ class ReplyListener() : ListenerAdapter() {
 
             val stickers = message.getStickers()
 
+            //New DB method
             if(stickers.isNotEmpty()){
                 log.info("sticker found, id: ${stickers[0].getId()}")
-                for(reply in replies.list) {
-                    if (reply.first.containsMatchIn(stickers[0].getId())) {
-                        val selectedReply = reply.second[Random.nextInt(reply.second.size)].trim()
-                        log.info("Replying $selectedReply to sticker ${stickers[0].getId()} in ${message.contentRaw}")
-                        var msg = MessageBuilder().append(selectedReply).setTTS(true).build()
-                        channel.sendMessage(msg).queue()
-                    }
-                }
+
             }
 
-            for(reply in replies.list){
-                if(reply.first.containsMatchIn(message.contentRaw.toLowerCase())){
-                    val selectedReply = reply.second[Random.nextInt(reply.second.size)].trim()
-                    log.info("Replying $selectedReply to ${message.contentRaw}")
-                    var msg = MessageBuilder().append(selectedReply).setTTS(true).build()
-                    channel.sendMessage(msg).queue()
-                }
-            }
+            //Old list method
+//            if(stickers.isNotEmpty()){
+//                log.info("sticker found, id: ${stickers[0].getId()}")
+//                for(reply in replies.list) {
+//                    if (reply.first.containsMatchIn(stickers[0].getId())) {
+//                        val selectedReply = reply.second[Random.nextInt(reply.second.size)].trim()
+//                        log.info("Replying $selectedReply to sticker ${stickers[0].getId()} in ${message.contentRaw}")
+//                        var msg = MessageBuilder().append(selectedReply).setTTS(true).build()
+//                        channel.sendMessage(msg).queue()
+//                    }
+//                }
+//            }
+//
+//            for(reply in replies.list){
+//                if(reply.first.containsMatchIn(message.contentRaw.toLowerCase())){
+//                    val selectedReply = reply.second[Random.nextInt(reply.second.size)].trim()
+//                    log.info("Replying $selectedReply to ${message.contentRaw}")
+//                    var msg = MessageBuilder().append(selectedReply).setTTS(true).build()
+//                    channel.sendMessage(msg).queue()
+//                }
+//            }
     }
     }
 

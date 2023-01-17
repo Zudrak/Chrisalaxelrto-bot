@@ -1,6 +1,6 @@
 create table message_triggers
 (
-    id       bigint  not null,
+    id       bigint auto_increment not null,
     guild_id bigint  not null,
     regex    varchar not null,
     constraint guild_id_key

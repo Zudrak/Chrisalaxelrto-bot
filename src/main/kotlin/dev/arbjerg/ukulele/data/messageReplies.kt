@@ -24,14 +24,17 @@ class MessageRepliesService(private val repo: MessageRepliesRepository) {
     private val cache: AsyncLoadingCache<Long, List<MessageReply>> = Caffeine.newBuilder()
         .expireAfterAccess(Duration.ofMinutes(10))
         .buildAsync { id, _ ->
-            repo.findAll().filter{  it.triggerId == id }.collectList().defaultIfEmpty(listOf()).toMono().toFuture() }
+            repo.findAll().collectList().filter{ it -> it.any{it.triggerId == id}}.toMono().toFuture() }
 
     fun get(triggerId: Long) = cache[triggerId].toMono().defaultIfEmpty(
         listOf()
     )
     suspend fun getAwait(guildId: Long): List<MessageReply> = get(guildId).awaitSingle()
 
-    fun insert(triggerId: Long, msg: MessageReply){repo.save(msg).block() }
+    fun insert(triggerId: Long, msg: MessageReply){
+        msg.apply { new = true }
+        repo.save(msg).block()
+    }
 
 //    fun transform(guildId: Long, func: (List<MessageReplies>) -> Unit): Mono<List<MessageReplies>> = cache[guildId]
 //        .toMono()
@@ -49,12 +52,13 @@ class MessageRepliesService(private val repo: MessageRepliesRepository) {
 @Table("message_replies")
 data class MessageReply(
     @Id
-    val id: Long,
+    @Column("id")
+    val replyId: Long?,
     var triggerId: Long? = null,
     var message: String? = null
-) : Persistable<Long> {
+) : Persistable<Long?> {
     @Transient var new: Boolean = false
-    override fun getId() = id
+    override fun getId() = replyId
     override fun isNew() = new
 }
 

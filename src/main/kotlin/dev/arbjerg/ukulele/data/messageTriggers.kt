@@ -8,11 +8,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.Transient
 import org.springframework.data.domain.Persistable
+import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import org.springframework.data.repository.reactive.ReactiveCrudRepository
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Mono
-import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 import java.time.Duration
 
@@ -20,15 +19,22 @@ import java.time.Duration
 class MessageTriggersService(private val repo: MessageTriggersRepository) {
     private val log: Logger = LoggerFactory.getLogger(MessageTriggersService::class.java)
 
-    private val cache: AsyncLoadingCache<Long, List<MessageTriggers>> = Caffeine.newBuilder()
+    private val cache: AsyncLoadingCache<Long, List<MessageTrigger>> = Caffeine.newBuilder()
         .expireAfterAccess(Duration.ofMinutes(10))
         .buildAsync { id, _ ->
-            repo.findAll().filter{  it.guildId == id }.collectList().defaultIfEmpty(listOf()).toMono().toFuture() }
+            repo.findAll().collectList().filter{ it -> it.any { it.guildId == id }}.defaultIfEmpty(listOf()).toMono().toFuture() }
 
     fun get(guildId: Long, msg: String) = cache[guildId].toMono().filter { it -> it.any { Regex(it.regex!!).containsMatchIn(msg) } }.defaultIfEmpty(
         listOf()
     )
-    suspend fun getAwait(guildId: Long, msg: String): List<MessageTriggers> = get(guildId, msg).awaitSingle()
+    fun getAllForGuild(guildId: Long) = cache[guildId].toMono().defaultIfEmpty(
+        listOf()
+    )
+    fun insert(guildId: Long, trigger : MessageTrigger){
+        trigger.apply { new = true }
+        repo.save(trigger).block()
+    }
+    suspend fun getAwait(guildId: Long, msg: String): List<MessageTrigger> = get(guildId, msg).awaitSingle()
 
 //    fun transform(guildId: Long, func: (List<MessageTriggers>) -> Unit): Mono<List<MessageTriggers>> = cache[guildId]
 //        .toMono()
@@ -44,14 +50,16 @@ class MessageTriggersService(private val repo: MessageTriggersRepository) {
 }
 
 @Table("message_triggers")
-data class MessageTriggers(
-    @Id val id: Long,
+data class MessageTrigger(
+    @Id
+    @Column("id")
+    val triggerId: Long?,
     var guildId: Long? = null,
     var regex: String? = null
-) : Persistable<Long> {
+) : Persistable<Long?> {
     @Transient var new: Boolean = false
-    override fun getId() = guildId
+    override fun getId() = triggerId
     override fun isNew() = new
 }
 
-interface MessageTriggersRepository : ReactiveCrudRepository<MessageTriggers, Long>
+interface MessageTriggersRepository : ReactiveCrudRepository<MessageTrigger, Long>

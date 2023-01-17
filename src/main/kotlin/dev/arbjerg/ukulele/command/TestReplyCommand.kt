@@ -10,10 +10,9 @@ import dev.arbjerg.ukulele.jda.CommandContext
 import org.springframework.stereotype.Component
 
 @Component
-class TestReplyCommand(val messageRepliesService : MessageRepliesService) : Command("test") {
+class TestReplyCommand(val messageRepliesService : MessageTriggersService) : Command("test") {
     override suspend fun CommandContext.invoke() {
-        messageRepliesService.insert(5, MessageReply(id = 1, triggerId = 5, message = argumentText).apply{new = true})
-        val hello = messageRepliesService.get(5)
+        val hello = messageRepliesService.getAllForGuild(guild.idLong)
         val hai = hello.block()
         reply(hai.toString())
     }

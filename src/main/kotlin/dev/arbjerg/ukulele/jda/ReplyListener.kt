@@ -40,13 +40,13 @@ class ReplyListener(val messageRepliesService: MessageRepliesService, val messag
 
                 msg = "$msg ${message.contentRaw}"
 
-                val messageTriggers = messageTriggersService.getAwait(event.guild.idLong, msg = msg)
+                val messageTriggers = messageTriggersService.get(event.guild.idLong, msg = msg)
                 if (messageTriggers.isNotEmpty()){
                     for (trigger in messageTriggers){
                         val replies = messageRepliesService.getAwait(trigger.triggerId!!)
                         if (replies.isNotEmpty()){
                             val selectedReply = replies[Random.nextInt(replies.size)]
-                            val reply = MessageBuilder().append(selectedReply).setTTS(true).build()
+                            val reply = MessageBuilder().append(selectedReply.message).setTTS(true).build()
                             channel.sendMessage(reply).queue()
                         }
                     }

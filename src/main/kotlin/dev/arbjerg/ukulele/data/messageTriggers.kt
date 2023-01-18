@@ -2,6 +2,7 @@ package dev.arbjerg.ukulele.data
 
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import com.github.benmanes.caffeine.cache.Caffeine
+import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,6 +13,7 @@ import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import org.springframework.data.repository.reactive.ReactiveCrudRepository
 import org.springframework.stereotype.Service
+import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 import java.time.Duration
 
@@ -22,11 +24,17 @@ class MessageTriggersService(private val repo: MessageTriggersRepository) {
     private val cache: AsyncLoadingCache<Long, List<MessageTrigger>> = Caffeine.newBuilder()
         .expireAfterAccess(Duration.ofMinutes(10))
         .buildAsync { id, _ ->
-            repo.findAll().collectList().filter{ it -> it.any { it.guildId == id }}.defaultIfEmpty(listOf()).toMono().toFuture() }
+            repo.findAll().collectList().filter{ it -> it.any { it.guildId == id }}.defaultIfEmpty(listOf()).toFuture() }
 
-    fun get(guildId: Long, msg: String) = cache[guildId].toMono().filter { it -> it.any { Regex(it.regex!!).containsMatchIn(msg) } }.defaultIfEmpty(
-        listOf()
-    )
+    fun get(guildId: Long, msg: String) : List<MessageTrigger>{
+        val trigger = cache[guildId].toMono().toFlux().flatMap {
+                triggerList -> triggerList.filter {
+                    Regex(it.regex!!, RegexOption.IGNORE_CASE).containsMatchIn(msg)
+                }.toMono()
+        }.defaultIfEmpty(listOf())
+
+        return trigger.blockLast()!!
+    }
     fun getAllForGuild(guildId: Long) = cache[guildId].toMono().defaultIfEmpty(
         listOf()
     )
@@ -34,7 +42,7 @@ class MessageTriggersService(private val repo: MessageTriggersRepository) {
         trigger.apply { new = true }
         repo.save(trigger).block()
     }
-    suspend fun getAwait(guildId: Long, msg: String): List<MessageTrigger> = get(guildId, msg).awaitSingle()
+//    suspend fun getAwait(guildId: Long, msg: String): List<MessageTrigger> = get(guildId, msg).defaultIfEmpty(listOf()).block()!!
 
 //    fun transform(guildId: Long, func: (List<MessageTriggers>) -> Unit): Mono<List<MessageTriggers>> = cache[guildId]
 //        .toMono()

@@ -24,12 +24,12 @@ class MessageRepliesService(private val repo: MessageRepliesRepository) {
     private val cache: AsyncLoadingCache<Long, List<MessageReply>> = Caffeine.newBuilder()
         .expireAfterAccess(Duration.ofMinutes(10))
         .buildAsync { id, _ ->
-            repo.findAll().collectList().filter{ it -> it.any{it.triggerId == id}}.toMono().toFuture() }
+            repo.findAll().collectList().flatMap{ replyList -> replyList.filter{it.triggerId == id}.toMono()}.toFuture() }
 
     fun get(triggerId: Long) = cache[triggerId].toMono().defaultIfEmpty(
         listOf()
     )
-    suspend fun getAwait(guildId: Long): List<MessageReply> = get(guildId).awaitSingle()
+    suspend fun getAwait(triggerId: Long): List<MessageReply> = get(triggerId).awaitSingle()
 
     fun insert(triggerId: Long, msg: MessageReply){
         msg.apply { new = true }

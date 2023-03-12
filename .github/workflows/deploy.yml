@@ -45,7 +45,8 @@ jobs:
                 announceTracks: true # Announce the start of a track
                 azureToken: "${{ secrets.AZURE_VISION_API_TOKEN }}" # Azure token for API calls
                 azureEndpoint: "${{ secrets.AZURE_VISION_API_ENDPOINT }}" #Azure endpoint for API calls
-        
+                openAIToken: "${{ secrets.OPENAI_API_ENDPOINT }}"
+
         - uses: actions/download-artifact@v3
           with:
             name: ${{ github.sha }}-ukulele

@@ -18,7 +18,7 @@ class Replies(
         //@Bladexon
         Pair(ToRegex("<@190624436913831938>"),                          listOf("Who dares summon the kawaii-lord!")),
         //@Chrisalaxelrto
-        Pair(ToRegex("<@889612265920266251>"),                          listOf("Who dares summon the robotic overlord!")),
+        //Pair(ToRegex("<@889612265920266251>"),                          listOf("Who dares summon the robotic overlord!")),
     //Roles
         //@Stellaris
         Pair(ToRegex("<@825551873473904650>"),                          listOf("Wait, that's still a game?")),

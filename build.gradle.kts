@@ -39,7 +39,7 @@ dependencies {
     }
     
     // import Kotlin API client BOM
-    implementation(platform("com.aallam.openai:openai-client-bom:3.0.0"))
+    implementation(platform("com.aallam.openai:openai-client-bom:3.2.0"))
 
 // define dependencies without versions
     implementation("com.aallam.openai:openai-client")

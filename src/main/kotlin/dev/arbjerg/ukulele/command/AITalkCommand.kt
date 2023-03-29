@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component
 import kotlin.time.Duration.Companion.seconds
 @Component
 class AITalkCommand(final var botProps: BotProps) : Command("talk") {
-    private final val MESSAGE_LIMIT = 20
+    private final val MESSAGE_LIMIT = 40
 
     @OptIn(BetaOpenAI::class)
     private val messages  = mutableListOf<ChatMessage>()
@@ -42,7 +42,7 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
             }
 
             val completionRequest = ChatCompletionRequest(
-                model = ModelId("gpt-3.5-turbo"),
+                model = ModelId("gpt-4"),
                 messages = messages
             )
             val completion: ChatCompletion = openAI.chatCompletion(completionRequest)

@@ -60,5 +60,5 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
 
     override fun HelpContext.provideHelp() {
         addUsage("<text>")
-        addDescription("Requests an answer from OpenAI's GPT-3.5-Turbo model")    }
+        addDescription("Requests an answer from OpenAI's GPT-4 model")    }
 }

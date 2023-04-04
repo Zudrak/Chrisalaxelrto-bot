@@ -17,7 +17,6 @@ import dev.arbjerg.ukulele.jda.CommandContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.springframework.boot.logging.LogLevel
 import org.springframework.stereotype.Component
 import kotlin.time.Duration.Companion.seconds
 @Component
@@ -29,7 +28,7 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
             ,ChatMessage(ChatRole.User, "You are talking in the discord group Porebazu, with 5 people. Their real names and user names are the following (try refering to them by their real names):\n" +
                 "-Alan (Bladexon): a guy obsessed with redheaded, red eyed, twintail wearing, tsundere girls. He might also transform into a female witch.\n" +
                 "-Albert/Alberto (Darksainor): a masochist that has a fetish for black haired sadist, gungirls/robot girls. He also wants to become an easily abusable gun.\n" +
-                "-Axel (Axepoi, they/them): a person that everyone believes has a fetish for pale, white-haired, petite, AI, angry, depressed, rich, foxgirls. They heavily deny all of this, but might also want to become that instead?\n" +
+                "-Axel (Axepoi, they/them): a person that everyone believes has a fetish for pale, white-haired, petite, AI, angry, depressed, rich, foxgirls. They heavily deny all of this, but might also want to become one instead?\n" +
                 "-David (PandaKnight): a mysterious panda that might like Sora?\n" +
                 "-Ximena (Sora): a girl that tries to hide how much she loves half-dragon, mages, knights. or magical creatures. She is also the group's car.\n" +
                 "You are playing the role of Chrisalaxelrto, an AI that's like the amalgamation of Alan, Albert, and Axel's mind.")
@@ -39,19 +38,23 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
 
     @OptIn(DelicateCoroutinesApi::class, BetaOpenAI::class)
     override suspend fun CommandContext.invoke() {
-        var message = argumentText
+        channel.sendTyping().queue()
+
+        log.info(channel.toString())
+        val msg = argumentText
 
         if(argumentText.trim().isEmpty()){
             return
         }
 
-        log.info(String.format("using AI to reply to %s with:", message))
+        log.info(String.format("using AI to reply to %s with:", msg))
 
         GlobalScope.launch {
+
             if(invoker.nickname != null){
-                messages.add(ChatMessage(ChatRole.User, message, invoker.nickname))
+                messages.add(ChatMessage(ChatRole.User, msg, invoker.nickname))
             }else{
-                messages.add(ChatMessage(ChatRole.User, message, invoker.user.name))
+                messages.add(ChatMessage(ChatRole.User, msg, invoker.user.name))
             }
 
             var success = false
@@ -66,12 +69,16 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
                     val res = completion.choices.first().message?.content
                     res?.let { ChatMessage(ChatRole.Assistant, it) }?.let { messages.add(it) }
 
-                    res?.chunked(1000)?.forEach {
-                        reply(it)
+                    res?.chunked(1000)?.forEachIndexed { index, s ->
+                        if(index == 0){
+                            replyTo(s)
+                        }else{
+                            reply(s)
+                        }
                     }
                     success = true
                 }catch (e: OpenAIAPIException){
-                    log.info("Context full, removing message")
+                    log.info("$e Context full, removing message")
                     messages.removeAt(2)
                 }
             }while(!success)

@@ -45,6 +45,11 @@ class CommandContext(
         channel.sendMessage(msg).queue()
     }
 
+    fun replyTo(msg: String){
+        val messageBuilder = MessageBuilder().append(msg)
+        message.reply(messageBuilder.build()).queue()
+    }
+
     fun replyTTS(msg: String){
         val messageBuilder = MessageBuilder().append(msg).setTTS(true)
         replyMsg(messageBuilder.build())

@@ -46,7 +46,6 @@ class Replies(
                                                                                     "Wait don't shoot, I have so much to do, so many lives to ruin!",
                                                                                     "Just kill the stupid cat before something happens, it should have more lives anyway")),
     //Other
-        Pair(ToRegex("chrisalaxel?rto"),                                listOf("Who dares to call upon the great Chrisalaxelrto, ruler of all")),
         Pair(ToRegex("coletas?|twintails?"),                            listOf("What is the sick bastard doing now?")),
         Pair(ToRegex("peli ?rojas?|red ?head"),                         listOf("Such a weird specimen")),
         Pair(ToRegex("ojos? ?rojos?|red ?eye[ds]?"),                    listOf("Who would even like red eyes, clearly evil")),

@@ -55,6 +55,14 @@ dependencies {
 
 }
 
+sourceSets{
+    main{
+        resources{
+            srcDirs ("src/main/resources/tokenizers/gpt2")
+        }
+    }
+}
+
 tasks.withType<BootJar> {
     archiveFileName.set("ukulele.jar")
     doLast {

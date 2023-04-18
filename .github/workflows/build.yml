@@ -13,7 +13,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 18
-          distribution: 'microsoft'
+          distribution: 'adopt'
       - name: Build with Gradle
         run: ./gradlew --no-daemon build
 

@@ -33,9 +33,10 @@ dependencies {
     //Tokenizer
     implementation("com.google.api-client:google-api-client:1.32.2")
     implementation("org.apache.commons:commons-lang3:3.12.0")
-    implementation("org.springframework.boot:spring-boot-starter-web")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+    implementation("org.apache.commons:commons-lang3:3.12.0")
+    implementation("org.apache.tomcat:tomcat-util:11.0.0-M4")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

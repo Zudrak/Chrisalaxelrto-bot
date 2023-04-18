@@ -96,6 +96,8 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
                 log.error("$e")
             }
 
+            tokens += tokenizer.encode(messages.last().content).size
+
             for (i in 1..2) {
                 var tmp = messages[context]
                 messages.add(tmp)

@@ -30,6 +30,13 @@ dependencies {
 
     implementation(group = "com.microsoft.azure.cognitiveservices", name = "azure-cognitiveservices-computervision", version = "1.0.9-beta")
 
+    //Tokenizer
+    implementation("com.google.api-client:google-api-client:1.32.2")
+    implementation("org.apache.commons:commons-lang3:3.12.0")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.4.0")

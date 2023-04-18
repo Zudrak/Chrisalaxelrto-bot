@@ -3,7 +3,10 @@ package ai.tunib.tokenizer;
 import com.google.api.client.util.Maps;
 import com.google.api.client.util.Sets;
 import com.google.common.primitives.Chars;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -40,7 +43,7 @@ public class GPT2Tokenizer {
         try {
             this.encoder = new JSONParser(new InputStreamReader(encoderFile.getInputStream(), StandardCharsets.UTF_8)).parseObject();
             this.decoder = encoder.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
-            this.bpe = Files.readAllLines(Paths.get(bpeFile.getURI()), StandardCharsets.UTF_8);
+            this.bpe = new BufferedReader(new InputStreamReader(bpeFile.getInputStream(), StandardCharsets.UTF_8)).lines().collect(Collectors.toList());
 
             for (int i = 0; i < this.bpe.size(); i++) {
                 String[] pairs = bpe.get(i).split(" ");

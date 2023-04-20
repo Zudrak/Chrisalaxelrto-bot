@@ -44,6 +44,24 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
     private final val openAIConfig = OpenAIConfig(token = botProps.openAIToken, timeout = Timeout(socket = 320.seconds), logLevel = com.aallam.openai.api.logging.LogLevel.Info)
     val openAI = OpenAI(openAIConfig)
 
+    @OptIn(BetaOpenAI::class)
+    fun RecalculateTokens(i: Int){
+        messages.removeAt(i)
+        context--
+        var index = 0
+        tokens = 0
+        try{
+            messages.forEach {
+                tokens+= tokenizer.encode(it.content).size
+                index++
+            }
+            messages.forEachIndexed { index, chatMessage -> tokens+= tokenizer.encode(chatMessage.content).size }
+        } catch (e: Exception) {
+            log.error("$e")
+            RecalculateTokens(index)
+        }
+    }
+
     @OptIn(DelicateCoroutinesApi::class, BetaOpenAI::class)
     override suspend fun CommandContext.invoke() {
         channel.sendTyping().queue()
@@ -66,14 +84,23 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
                 messages.add(ChatMessage(ChatRole.User, msg, invoker.user.name))
             }
 
-
-            tokens += tokenizer.encode(msg).size
+            try{
+                tokens += tokenizer.encode(messages.last().content).size
+            }catch (e: Exception){
+                log.error("$e")
+                RecalculateTokens(messages.lastIndex)
+            }
             print(tokens)
 
             while(tokens >= 3000){
-                tokens -= tokenizer.encode(messages[0].content).size
-                messages.removeAt(0)
-                context--
+                try{
+                    tokens -= tokenizer.encode(messages[0].content).size
+                    messages.removeAt(0)
+                    context--
+                }catch (e: Exception){
+                    log.error("$e")
+                    RecalculateTokens(0)
+                }
             }
 
             try {
@@ -96,7 +123,12 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
                 log.error("$e")
             }
 
-            tokens += tokenizer.encode(messages.last().content).size
+            try{
+                tokens += tokenizer.encode(messages.last().content).size
+            }catch (e: Exception){
+                log.error("$e")
+                RecalculateTokens(messages.lastIndex)
+            }
 
             for (i in 1..2) {
                 var tmp = messages[context]

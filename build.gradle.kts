@@ -20,7 +20,7 @@ repositories {
 dependencies {
     implementation("net.dv8tion:JDA:4.4.1_353")
     //implementation("com.sedmelluq:lavaplayer:1.3.78")
-    implementation("com.github.walkyst:lavaplayer-fork:1.4.1")
+    implementation("com.github.walkyst:lavaplayer-fork:1.4.3")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 
     runtimeOnly("com.h2database:h2")

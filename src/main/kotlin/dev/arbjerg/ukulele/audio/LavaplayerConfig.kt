@@ -13,6 +13,7 @@ class LavaplayerConfig {
     fun playerManager(): AudioPlayerManager {
         val apm = DefaultAudioPlayerManager()
         AudioSourceManagers.registerRemoteSources(apm)
+        AudioSourceManagers.registerLocalSource(apm)
         return apm
     }
 

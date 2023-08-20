@@ -1,20 +1,17 @@
 package dev.arbjerg.ukulele.jda
 
-import dev.arbjerg.ukulele.audio.Player
-import dev.arbjerg.ukulele.audio.PlayerRegistry
 import dev.arbjerg.ukulele.config.BotProps
 import dev.arbjerg.ukulele.data.GuildPropertiesService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import net.dv8tion.jda.api.MessageBuilder
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.entities.VoiceChannel
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
+import net.dv8tion.jda.api.entities.Message
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -34,7 +31,7 @@ class InspirationalListener(
     private val log: Logger = LoggerFactory.getLogger(EventHandler::class.java)
     private val timer: Timer = Timer()
     private var task: TimerTask? = null
-    private val registry: Map<String, Command>
+    private final val registry: Map<String, Command>
     private var taskChannel: VoiceChannel? = null
 
     init {
@@ -46,27 +43,30 @@ class InspirationalListener(
         registry = map
     }
 
-    override fun onGuildVoiceJoin(event: GuildVoiceJoinEvent) {
-        if (!event.member.user.isBot) {
-            task?.cancel()
-            if(event.channelJoined != taskChannel) task = null
-            if (task == null) buildTask(event.channelJoined, event.guild, event.member)
+    override fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
+        if (event.channelJoined != null){
+            onGuildVoiceJoin(event)
+            return
+        }
+
+        if (event.channelLeft != null) {
+            onGuildVoiceLeave(event)
         }
     }
 
-    override fun onGuildVoiceMove(event: GuildVoiceMoveEvent) {
-        if(!event.member.user.isBot){
+    fun onGuildVoiceJoin(event: GuildVoiceUpdateEvent) {
+        if (!event.member.user.isBot) {
             task?.cancel()
             if(event.channelJoined != taskChannel) task = null
-            if(task == null) buildTask(event.channelJoined, event.guild, event.member)
+            if (task == null) buildTask(event.channelJoined!!.asVoiceChannel(), event.guild, event.member)
         }
     }
 
-    override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent){
-        if (!event.member.user.isBot) {
-            val channel = event.channelLeft
+    fun onGuildVoiceLeave(event: GuildVoiceUpdateEvent){
+        if (!event.member.user.isBot && event.channelLeft != null) {
+            val channel = event.channelLeft!!
             if (taskChannel == channel){
-                val users = channel.members.filter{ member -> !member.user.isBot() }
+                val users = channel.members.filter{ member -> !member.user.isBot }
                 if ( users.isEmpty() ){
                     log.info("Stopped scheduler for inspiration")
                     task?.cancel()
@@ -75,7 +75,7 @@ class InspirationalListener(
                     var maxMembers = 0
                     var maxChannel: VoiceChannel? = null
                     for (voiceChannel in event.guild.voiceChannels){
-                        val members = voiceChannel.members.filter{ member -> !member.user.isBot() }
+                        val members = voiceChannel.members.filter{ member -> !member.user.isBot }
                         if (members.isNotEmpty() && members.size > maxMembers){
                             maxMembers = members.size
                             maxChannel = voiceChannel
@@ -93,7 +93,7 @@ class InspirationalListener(
         task = timer.scheduleAtFixedRate(0, 120000) {
             val rng = (1..100).random()
             if (rng <= 1) {
-                val message = MessageBuilder().append("${botProps.prefix}inspire").build()
+                val message = MessageCreateBuilder().addContent("${botProps.prefix}inspire").build()
                 runBlocking {
                     launch{
                         val guildProperties = guildProperties.getAwait(guild.idLong)
@@ -101,9 +101,12 @@ class InspirationalListener(
                         val name = "inspire"
                         val trigger = if (guildProperties.prefix == null) botProps.prefix + name else guildProperties.prefix + name
                         val command = registry[name] ?: return@launch
-                        val ctx = CommandContext(contextBeans, guildProperties, guild, channel, member, message, command, botProps.prefix, trigger)
 
-                        log.info("Invocation: ${message.contentRaw}")
+                        val actualMessage = channel.sendMessage(message).complete()
+
+                        val ctx = CommandContext(contextBeans, guildProperties, guild, channel, member, actualMessage, command, botProps.prefix, trigger)
+
+                        log.info("Invocation: ${message.content}")
                         command.invoke0(ctx)
                         delay(120000)
                     }

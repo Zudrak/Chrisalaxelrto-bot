@@ -7,7 +7,7 @@ import dev.arbjerg.ukulele.data.GuildPropertiesService
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -28,7 +28,7 @@ class ReplyAIListener(final var botProps: BotProps, val guildProperties: GuildPr
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
+    override fun onMessageReceived(event: MessageReceivedEvent) {
         val guild = event.guild
         val mention = Regex("^(<@!?${event.guild.selfMember.id}>\\s*)").find(event.message.contentRaw)?.value
 
@@ -44,7 +44,7 @@ class ReplyAIListener(final var botProps: BotProps, val guildProperties: GuildPr
             val command = registry[name] ?: return@launch
 
             val ctx = event.member?.let {
-                CommandContext(contextBeans, guildProperties, guild, channel,
+                CommandContext(contextBeans, guildProperties, guild, channel.asTextChannel(),
                     it, event.message, command, botProps.prefix, trigger)
             }
 

@@ -9,20 +9,21 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
-import net.dv8tion.jda.api.entities.TextChannel
-import net.dv8tion.jda.api.MessageBuilder
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
+import net.dv8tion.jda.api.utils.messages.MessageCreateData
 import org.springframework.stereotype.Component
 
 class CommandContext(
-        val beans: Beans,
-        val guildProperties: GuildProperties,
-        val guild: Guild,
-        val channel: TextChannel,
-        val invoker: Member,
-        val message: Message,
-        val command: Command,
-        val prefix: String,
-        /** Prefix + command name */
+    val beans: Beans,
+    val guildProperties: GuildProperties,
+    val guild: Guild,
+    val channel: TextChannel,
+    val invoker: Member,
+    val message: Message,
+    val command: Command,
+    val prefix: String,
+    /** Prefix + command name */
         val trigger: String
 ) {
     @Component
@@ -46,21 +47,21 @@ class CommandContext(
     }
 
     fun replyTo(msg: String){
-        val messageBuilder = MessageBuilder().append(msg)
+        val messageBuilder = MessageCreateBuilder().addContent(msg)
         message.reply(messageBuilder.build()).queue()
     }
 
     fun replyTTS(msg: String){
-        val messageBuilder = MessageBuilder().append(msg).setTTS(true)
+        val messageBuilder = MessageCreateBuilder().addContent(msg).setTTS(true)
         replyMsg(messageBuilder.build())
     }
 
-    fun replyMsg(msg: Message) {
+    fun replyMsg(msg: MessageCreateData) {
         channel.sendMessage(msg).queue()
     }
 
     fun replyEmbed(embed: MessageEmbed) {
-        channel.sendMessage(embed).queue()
+        channel.sendMessageEmbeds(embed).queue()
     }
 
     fun replyHelp(forCommand: Command = command) {

@@ -1,11 +1,9 @@
 package dev.arbjerg.ukulele.jda
 
 import dev.arbjerg.ukulele.data.Replies
-import net.dv8tion.jda.api.MessageBuilder
-import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -18,10 +16,9 @@ class ReplyListener() : ListenerAdapter() {
 
     private val log: Logger = LoggerFactory.getLogger(EventHandler::class.java)
 
-    override fun onGuildMessageReceived(event: GuildMessageReceivedEvent) {
+    override fun onMessageReceived(event: MessageReceivedEvent){
         if (!event.author.isBot) {
             val channel = event.channel
-            val member = event.member
             val message = event.message
 
             val stickers = message.getStickers()
@@ -32,7 +29,7 @@ class ReplyListener() : ListenerAdapter() {
                     if (reply.first.containsMatchIn(stickers[0].getId())) {
                         val selectedReply = reply.second[Random.nextInt(reply.second.size)].trim()
                         log.info("Replying $selectedReply to sticker ${stickers[0].getId()} in ${message.contentRaw}")
-                        var msg = MessageBuilder().append(selectedReply).setTTS(true).build()
+                        var msg = MessageCreateBuilder().addContent(selectedReply).setTTS(true).build()
                         channel.sendMessage(msg).queue()
                     }
                 }
@@ -42,7 +39,7 @@ class ReplyListener() : ListenerAdapter() {
                 if(reply.first.containsMatchIn(message.contentRaw.toLowerCase())){
                     val selectedReply = reply.second[Random.nextInt(reply.second.size)].trim()
                     log.info("Replying $selectedReply to ${message.contentRaw}")
-                    var msg = MessageBuilder().append(selectedReply).setTTS(true).build()
+                    var msg = MessageCreateBuilder().addContent(selectedReply).setTTS(true).build()
                     channel.sendMessage(msg).queue()
                 }
             }

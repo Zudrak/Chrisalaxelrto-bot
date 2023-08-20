@@ -5,9 +5,8 @@ import dev.arbjerg.ukulele.data.GuildPropertiesService
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.VoiceChannel
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,17 +21,12 @@ class LonelyListener(
 
     private val log: Logger = LoggerFactory.getLogger(EventHandler::class.java)
 
-    override fun onGuildVoiceLeave(event: GuildVoiceLeaveEvent){
-        if (!event.member.user.isBot) {
-            isAlone(event.channelLeft, event.guild)
+    override fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent){
+        if (!event.member.user.isBot && event.channelLeft != null) {
+            isAlone(event.channelLeft!!.asVoiceChannel(), event.guild)
         }
     }
 
-    override fun onGuildVoiceMove(event: GuildVoiceMoveEvent){
-        if (!event.member.user.isBot) {
-            isAlone(event.channelLeft, event.guild)
-        }
-    }
 
     fun isAlone(channel: VoiceChannel, guild: Guild){
         val users = channel.members.filter{ member -> !member.user.isBot() }

@@ -16,12 +16,13 @@ repositories {
     maven { url = uri("https://m2.dv8tion.net/releases") }
     maven { url = uri("https://jitpack.io") }
     maven { url = uri("https://maven.lavalink.dev/snapshots") }
+    maven { url = uri("https://maven.lavalink.dev/releases") }
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.17")
-    //implementation("com.sedmelluq:lavaplayer:1.3.78")
-    implementation("dev.lavalink.youtube:common:1.4.0")
+    implementation("net.dv8tion:JDA:5.0.2")
+    implementation("dev.arbjerg:lavaplayer:2.2.1")
+    implementation("dev.lavalink.youtube:common:1.5.1")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 
     runtimeOnly("com.h2database:h2")

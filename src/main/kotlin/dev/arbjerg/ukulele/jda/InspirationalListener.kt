@@ -92,7 +92,7 @@ class InspirationalListener(
         taskChannel = channelJoined
         task = timer.scheduleAtFixedRate(0, 120000) {
             val rng = (1..100).random()
-            if (rng <= 1) {
+            if (rng <= 5) {
                 val message = MessageCreateBuilder().addContent("${botProps.prefix}inspire").build()
                 runBlocking {
                     launch{

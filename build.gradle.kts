@@ -20,9 +20,9 @@ repositories {
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.2")
-    implementation("dev.arbjerg:lavaplayer:2.2.1")
-    implementation("dev.lavalink.youtube:common:1.5.1")
+    implementation("net.dv8tion:JDA:5.1.1")
+    implementation("dev.arbjerg:lavaplayer:2.2.2")
+    implementation("dev.lavalink.youtube:common:1.8.3")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 
     runtimeOnly("com.h2database:h2")

@@ -21,7 +21,8 @@ class JdaConfig {
             imageListener: ImageListener,
             inspirationalListener: InspirationalListener,
             lonelyListener: LonelyListener,
-            replyListener: ReplyListener
+            replyListener: ReplyListener,
+            conversationListener: ConversationListener
     ): ShardManager {
         if (botProps.token.isBlank()) throw RuntimeException("Discord token not configured!")
         val activity = if (botProps.game.isBlank()) Activity.playing("music") else Activity.playing(botProps.game)
@@ -39,7 +40,7 @@ class JdaConfig {
                 .setEnableShutdownHook(false)
                 .setAutoReconnect(true)
                 .setShardsTotal(botProps.shards)
-                .addEventListeners(eventHandler, replyAIListener, replyListener, imageListener, inspirationalListener, lonelyListener)
+                .addEventListeners(eventHandler, replyAIListener, replyListener, imageListener, inspirationalListener, lonelyListener, conversationListener)
                 .setActivity(activity)
 
         val shardManager: ShardManager

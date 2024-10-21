@@ -13,5 +13,6 @@ class BotProps(
         var announceTracks: Boolean = false,
         var azureToken: String = "",
         var openAIToken: String = "",
-        var azureEndpoint: String = ""
+        var azureEndpoint: String = "",
+        var ytAuthToken: String = ""
 )

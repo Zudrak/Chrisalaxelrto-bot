@@ -22,7 +22,7 @@ repositories {
 dependencies {
     implementation("net.dv8tion:JDA:5.1.1")
     implementation("dev.arbjerg:lavaplayer:2.2.2")
-    implementation("dev.lavalink.youtube:v2:1.9.0")
+    implementation("dev.lavalink.youtube:v2:1.10.1")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 
     runtimeOnly("com.h2database:h2")

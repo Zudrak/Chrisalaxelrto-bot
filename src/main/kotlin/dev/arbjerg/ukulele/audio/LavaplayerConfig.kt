@@ -5,7 +5,6 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import dev.arbjerg.ukulele.config.BotProps
 import dev.lavalink.youtube.YoutubeAudioSourceManager
-import dev.lavalink.youtube.clients.AndroidTestsuiteWithThumbnail
 import dev.lavalink.youtube.clients.MusicWithThumbnail
 import dev.lavalink.youtube.clients.Web
 import dev.lavalink.youtube.clients.WebEmbedded
@@ -20,7 +19,7 @@ class LavaplayerConfig(var botProps: BotProps) {
     fun playerManager(): AudioPlayerManager {
         val apm = DefaultAudioPlayerManager()
 
-        val ytSourceManager: YoutubeAudioSourceManager = YoutubeAudioSourceManager(true, MusicWithThumbnail(), WebWithThumbnail(), AndroidTestsuiteWithThumbnail(), Web(), WebEmbedded())
+        val ytSourceManager: YoutubeAudioSourceManager = YoutubeAudioSourceManager(true, MusicWithThumbnail(), WebWithThumbnail(), Web(), WebEmbedded())
 
         ytSourceManager.useOauth2(botProps.ytAuthToken, true);
         apm.registerSourceManager(ytSourceManager)

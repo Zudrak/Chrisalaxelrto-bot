@@ -59,7 +59,21 @@ jobs:
             username: ${{ secrets.USERNAME }}
             key: ${{ secrets.KEY }}
             script: echo ${{ secrets.SUDO_PASS }} | sudo -S systemctl stop ukulele
-
+        - name: Connect to Wireguard VPN
+          uses: egor-tensin/setup-wireguard@v1.2.0
+          with:
+            # Endpoint in the HOST:PORT format
+            endpoint:  ${{ secrets.VPN_HOST }}
+            # Public key of the endpoint
+            endpoint_public_key: ${{ secrets.VPN_HOST_PUBLIC_KEY }}
+            # Comma-separated list of IP addresses
+            ips:  ${{ secrets.VPN_IP}}
+            # Comma-separated list of netmasks
+            allowed_ips:  ${{ secrets.VPN_ALLOWED_IPS}}
+            # Private key
+            private_key:  ${{ secrets.VPN_PRIVATE_KEY}}
+            # Useful for NAT traversal
+            keepalive:   ${{ secrets.VPN_KEEPALIVE}}
         - name: Copy jar file
           uses: appleboy/scp-action@master
           with:

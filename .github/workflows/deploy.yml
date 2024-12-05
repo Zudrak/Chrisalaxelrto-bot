@@ -48,6 +48,9 @@ jobs:
                 azureEndpoint: "${{ secrets.AZURE_VISION_API_ENDPOINT }}" #Azure endpoint for API calls
                 openAIToken: "${{ secrets.OPENAI_API_ENDPOINT }}"
                 ytAuthToken: "${{ secrets.YT_AUTH_TOKEN }}" 
+                visitorData: "${{ secrets.YT_VISITOR_DATA }}" 
+                poToken: "${{ secrets.YT_PO_TOKEN }}" 
+
 
         - uses: actions/download-artifact@v3
           with:

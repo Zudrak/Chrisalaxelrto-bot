@@ -14,5 +14,7 @@ class BotProps(
         var azureToken: String = "",
         var openAIToken: String = "",
         var azureEndpoint: String = "",
-        var ytAuthToken: String = ""
+        var ytAuthToken: String = "",
+        var visitorData: String = "",
+        var poToken: String = ""
 )

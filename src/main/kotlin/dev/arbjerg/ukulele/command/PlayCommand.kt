@@ -28,7 +28,7 @@ class PlayCommand(
 
         var identifier = argumentText
         if (!checkValidUrl(identifier)) {
-            identifier = "ytsearch:$identifier"
+            identifier = "scsearch:$identifier"
         }
 
         players.get(guild, guildProperties).lastChannel = channel

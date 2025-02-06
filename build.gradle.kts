@@ -47,14 +47,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
-    
-    // import Kotlin API client BOM
-    implementation(platform("com.aallam.openai:openai-client-bom:3.2.0"))
 
-// define dependencies without versions
-    implementation("com.aallam.openai:openai-client")
-    implementation("io.ktor:ktor-client-okhttp")
-
+    implementation("com.azure:azure-ai-openai:1.0.0-beta.13")
+    implementation("com.knuddels:jtokkit:1.1.0")
 
 }
 

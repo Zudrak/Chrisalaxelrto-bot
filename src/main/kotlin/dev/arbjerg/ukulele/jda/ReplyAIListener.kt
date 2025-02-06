@@ -30,9 +30,8 @@ class ReplyAIListener(final var botProps: BotProps, val guildProperties: GuildPr
     @OptIn(DelicateCoroutinesApi::class)
     override fun onMessageReceived(event: MessageReceivedEvent) {
         val guild = event.guild
-        val mention = Regex("^(<@!?${event.guild.selfMember.id}>\\s*)").find(event.message.contentRaw)?.value
 
-        if (event.author.isBot || mention == null) {
+        if (event.author.isBot) {
             return
         }
 

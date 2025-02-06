@@ -67,7 +67,7 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
 
                 var chatCompletionsOptions = ChatCompletionsOptions(chatMessages.map { it.first })
                 chatCompletionsOptions.n = 1
-                chatCompletionsOptions.maxCompletionTokens = 400
+                chatCompletionsOptions.maxCompletionTokens = 50
 
 
 

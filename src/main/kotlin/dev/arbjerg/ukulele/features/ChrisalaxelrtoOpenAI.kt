@@ -23,7 +23,8 @@ import java.time.format.DateTimeFormatter
 class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
     enum class Role {
         User,
-        Chrisalaxelrto
+        Chrisalaxelrto,
+        System
     }
 
     private val contextStr = """
@@ -57,6 +58,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
     private var lastMessage : String = ""
 
     init {
+        println("INIT CHRISALAXELRTO")
         chatMessages.add(Pair(context, tokensUsed))
     }
     private fun addMessageToContext(msg: String, role: Role) {
@@ -65,6 +67,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         val message = when (role) {
             Role.User -> ChatRequestUserMessage(msg)
             Role.Chrisalaxelrto -> ChatRequestAssistantMessage(msg)
+            Role.System -> ChatRequestSystemMessage(msg)
         }
 
         chatMessages.add(Pair(message, msgTokens))
@@ -86,9 +89,12 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         addMessageToContext(msgStr, Role.User)
     }
 
-    fun reply() : String{
+    suspend fun reply() : String{
         val chatCompletionsOptions = ChatCompletionsOptions(chatMessages.map { it.first })
         chatCompletionsOptions.n = 1
+
+        val currentTime = OffsetDateTime.now(timezoneId).format(timeFormat)
+        addMessageToContext(currentTime, Role.System)
 
         val chatCompletions = client.getChatCompletions("Chrisalaxelrto", chatCompletionsOptions)
         val botAnswer = chatCompletions.choices[0].message.content

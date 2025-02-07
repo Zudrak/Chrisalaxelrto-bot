@@ -11,6 +11,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
+import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI.Mood
 
 @Service
 class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI) : ListenerAdapter() {
@@ -22,26 +23,29 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI) : ListenerAdapter() {
         if(lastChannel == null) {
             return
         }
+        var delay = 10L
 
-        val delay = Random.nextLong(5, 15)
+        delay = when (chatAi.getMood()){
+            Mood.Chatty -> Random.nextLong(5, 10)
+            Mood.Busy -> Random.nextLong(1200, 1800)
+        }
 
         scheduler.schedule({
-            var msg = ""
+            var msg : String? = ""
             val job = GlobalScope.launch {
                 msg = chatAi.reply()
             }
 
-            val minTime = GlobalScope.launch {
-                delay(5000)
-            }
-
             runBlocking {
-                while(!job.isCompleted || !minTime.isCompleted) {
+                while(!job.isCompleted) {
                     delay(2000)
-                    lastChannel!!.sendTyping().queue()
                 }
                 job.join()
-                lastChannel!!.sendMessage(msg).queue()
+                if(!msg.isNullOrBlank()){
+                    lastChannel!!.sendTyping().queue()
+                    delay(5000)
+                    lastChannel!!.sendMessage(msg!!).queue()
+                }
             }
             scheduleTask() // Reschedule the task with a new random delay
         }, delay, TimeUnit.SECONDS)

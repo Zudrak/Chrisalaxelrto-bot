@@ -21,7 +21,7 @@ class AITalkCommand(var chatAi: ChrisalaxelrtoOpenAI) : Command("talk") {
 
         GlobalScope.launch {
             try {
-                reply(chatAi.reply())
+                reply(chatAi.reply()?: "")
             } catch (e: Exception) {
                 log.error("$e")
             }

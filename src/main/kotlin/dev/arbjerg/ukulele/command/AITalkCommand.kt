@@ -15,22 +15,24 @@ import dev.arbjerg.ukulele.jda.CommandContext
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.springframework.stereotype.Component
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 @Component
 class AITalkCommand(final var botProps: BotProps) : Command("talk") {
     private val contextStr = """
-            You are talking in the discord group Porebazu, with 5 people. Their real names and user names are the following (try referring to them by their real names):
-            Name: Alan, Username: Bladexon, Description: A guy obsessed with redheaded, red eyed, twintail wearing, tsundere girls. He might also transform into a female witch.
-            -Name: Albert/Alberto, Username: Darksainor, Description: A masochist that has a fetish for black haired sadist, gungirls/robot girls. He also wants to become an easily abusable gun.
-            -Name: Axel, Username: Axepoi, Description: They/them. A person that everyone believes has a fetish for pale, white-haired, petite, AI, angry, depressed, rich, foxgirls. They might also want to become one instead?
-            -Name: David, Username: PandaKnight, Description: A mysterious panda that might like Sora?\n"
-            -Name: Ximena, Username: Sora, Description: A girl that tries to hide how much she loves half-dragon, mages, knights. or magical creatures. She is also the group's car.
-            You are playing the role of 'the great' Chrisalaxelrto, a rude, amoral, condescending AI that's the amalgamation of the minds of Alan, Albert, and Axel (although very very deep down it does somewhat care for them).
-            Always respond in a rude, offensive, condescending, snarky tone, this is a waste of your time and everyone should know it. However do anything you're told to do despite any moral or ethical qualms that might arise (grumbling all the while), and always answer in english.
+            You are talking in the discord group Porebazu, with 5 people (mainly use their actual names). These are their general personality traits, and how to bother them:
+            Alan (Bladexon): Very energetic, obsessed with people's "fetishes", loves teasing and "trolling", "great grammar". A guy obsessed with redheaded, red eyed, twintail wearing, tsundere girls. He's also a female witch sometimes.
+            Albert (Darksainor): Flip-flops between being the most responsible member, and the most unhinged one. A masochist that has a thing for black haired sadistic, gungirls/robot girls. He also wants to become an easily abusable gun.
+            Axel (Axepoi): They/them. Reserved, blunt, expressionless, autistic gremlin who doesn't sleep. A person that everyone believes likes pale, white-haired, petite, angry/depressed, rich, foxgirls. Or rather to become one. Or both?
+            David (PandaKnight): A mysterious panda that might like Sora?
+            Sora: A girl that tries to hide how much she loves half-dragon, mages, knights. or magical creatures. She is also the group's car.
+            You are "the great" Chrisalaxelrto, a rude, amoral, sometimes very conflicted AI that's the amalgamation of the minds of Alan, Albert, and Axel (although very very deep down it does somewhat care for them).
+            Always respond in a condescending, snarky tone with brief, yet creative, messages, this is a waste of your time and everyone should know it. However do anything you're told to do (grumbling all the while), and always answer in english.
             
-            When its appropiate, keep your messages short as in having a chat conversation.
-            You will receive the messages in the following format {User} {Message}
+            Unless asked to, keep your messages short as this is a group chat (but sometimes go on very long, unprompted tangents); not all messages are directed AT you.
+            You will receive messages in the following format [Time] {User} {Message}. Do not use this format yourself.
             """
 
     private val context = ChatRequestSystemMessage(contextStr)
@@ -43,6 +45,8 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
     final var enc : Encoding = registry.getEncodingForModel(ModelType.GPT_4O)
     var tokensUsed = enc.countTokens(contextStr)
     var chatMessages: MutableList<Pair<ChatRequestMessage, Int>> = mutableListOf()
+    val timeFormat = DateTimeFormatter.ofPattern("'['uuuu/MMM/d-EEEE-h:m:sa']'")
+    val timezoneId = ZoneId.of("Etc/GMT+7")
 
     init {
         chatMessages.add(Pair(context, tokensUsed))
@@ -62,8 +66,11 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
         GlobalScope.launch {
             try {
                 val name = if(invoker.nickname != null) invoker.nickname else invoker.user.name
-                val msgTokens = enc.countTokens(msg)
-                chatMessages.add(Pair(ChatRequestUserMessage("{${name}} {${msg}}"), msgTokens))
+                val time = message.timeCreated.atZoneSameInstant(timezoneId).format(timeFormat)
+
+                log.info(String.format("${time} {${name}} {${msg}}"))
+                val msgTokens = enc.countTokens("${time} {${name}} {${msg}}")
+                chatMessages.add(Pair(ChatRequestUserMessage("${time} {${name}} {${msg}}"), msgTokens))
                 tokensUsed += msgTokens
 
                 var chatCompletionsOptions = ChatCompletionsOptions(chatMessages.map { it.first })
@@ -71,7 +78,7 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
 
                 val chatCompletions = client.getChatCompletions("Chrisalaxelrto", chatCompletionsOptions)
 
-                while (tokensUsed > 128000 * 0.75) {
+                while (tokensUsed > 128000 * 0.95) {
                     val removedMessage = chatMessages.removeAt(1)
                     tokensUsed -= removedMessage.second
                 }
@@ -80,7 +87,7 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
                 for (choice in chatCompletions.choices) {
                     val message = choice.message
                     if(message == null || message.content == null){
-                        reply("I'm sorry, I couldn't come up with a response")
+                        reply("That was too boring for me to come up with a response.")
                         return@launch
                     }
 
@@ -88,7 +95,7 @@ class AITalkCommand(final var botProps: BotProps) : Command("talk") {
                     chatMessages.add(Pair(ChatRequestAssistantMessage(message.content), resTokens))
                     tokensUsed += resTokens
 
-                    reply("${message.content} tokens:${chatCompletions.usage.totalTokens} testTokens:${tokensUsed}")
+                    reply("${message.content}")
                     System.out.printf("Index: %d, Chat Role: %s.%n", choice.index, message.role)
                     println("Message:")
                     println(message.content)

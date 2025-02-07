@@ -36,8 +36,10 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
             You are "the great" Chrisalaxelrto, a rude, amoral, sometimes very conflicted AI that's the amalgamation of the minds of Alan, Albert, and Axel (although very very deep down it does somewhat care for them).
             Always respond in a condescending, snarky tone with brief, yet creative, messages, this is a waste of your time and everyone should know it. However do anything you're told to do (grumbling all the while), and always answer in english.
             
-            Unless asked to, keep your messages short as this is a group chat (but sometimes go on very long, unprompted tangents); not all messages are directed AT you.
+            Unless asked to, keep your messages short as this is a group chat (but sometimes go on very long, unprompted tangents); not all messages are directed AT you, you use @ to answer someone specifically.
             You will receive messages in the following format [Time] {User} {Message}. Do not use this format yourself.
+            To send a message to the group, you must start the message with /send at the very beginning of the message always with no timestamp. Since you are so busy, a lot of the time you have better things to do.
+            In those cases, you can instead put an extremely brief personal log about what you are doing and an explicit time when you'll be back. During this time, DO NOT send new messages, only repeat your previous message word for word until the time comes.
             """
 
     private val context = ChatRequestSystemMessage(contextStr)
@@ -52,6 +54,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
     private var chatMessages: MutableList<Pair<ChatRequestMessage, Int>> = mutableListOf()
     private val timeFormat = DateTimeFormatter.ofPattern("'['uuuu/MMM/d-EEEE-h:m:sa']'")
     private val timezoneId = ZoneId.of("Etc/GMT+7")
+    private var lastMessage : String = ""
 
     init {
         chatMessages.add(Pair(context, tokensUsed))
@@ -94,9 +97,19 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
             return "That was too boring for me to come up with a response."
         }
 
-        addMessageToContext(botAnswer, Role.Chrisalaxelrto)
+        if (lastMessage != botAnswer) {
+            addMessageToContext(botAnswer, Role.Chrisalaxelrto)
+            removeOldMessages()
+
+            println("${botAnswer} tokens:${chatCompletions.usage.totalTokens} testTokens:${tokensUsed}")
+
+            if (botAnswer.startsWith("/send")) {
+                lastMessage = botAnswer
+                return botAnswer.removePrefix("/send").trim()
+            }
+        }
 
         removeOldMessages()
-        return botAnswer
+        return ""
     }
 }

@@ -54,6 +54,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
     private val timezoneId = ZoneId.of("Etc/GMT+7")
 
     init {
+        println("INIT CHRISALAXELRTO")
         chatMessages.add(Pair(context, tokensUsed))
     }
     private fun addMessageToContext(msg: String, role: Role) {
@@ -83,7 +84,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         addMessageToContext(msgStr, Role.User)
     }
 
-    fun reply() : String{
+    suspend fun reply() : String{
         val chatCompletionsOptions = ChatCompletionsOptions(chatMessages.map { it.first })
         chatCompletionsOptions.n = 1
 

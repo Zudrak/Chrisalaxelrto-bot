@@ -75,14 +75,16 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         }
     }
 
-    fun chatMessageReceived(offsetDateTime: OffsetDateTime, msg : String, invoker: Member): String {
+    fun chatMessageReceived(offsetDateTime: OffsetDateTime, msg : String, invoker: Member) {
         val name = if(invoker.nickname != null) invoker.nickname else invoker.user.name
         val time = offsetDateTime.atZoneSameInstant(timezoneId).format(timeFormat)
 
         val msgStr = "${time} {${name}} {${msg}}"
         addMessageToContext(msgStr, Role.User)
+    }
 
-        var chatCompletionsOptions = ChatCompletionsOptions(chatMessages.map { it.first })
+    fun reply() : String{
+        val chatCompletionsOptions = ChatCompletionsOptions(chatMessages.map { it.first })
         chatCompletionsOptions.n = 1
 
         val chatCompletions = client.getChatCompletions("Chrisalaxelrto", chatCompletionsOptions)

@@ -1,11 +1,7 @@
 package dev.arbjerg.ukulele.features
 
 import com.azure.ai.openai.OpenAIClientBuilder
-import com.azure.ai.openai.models.ChatCompletionsOptions
-import com.azure.ai.openai.models.ChatRequestAssistantMessage
-import com.azure.ai.openai.models.ChatRequestMessage
-import com.azure.ai.openai.models.ChatRequestSystemMessage
-import com.azure.ai.openai.models.ChatRequestUserMessage
+import com.azure.ai.openai.models.*
 import com.azure.core.credential.AzureKeyCredential
 import com.knuddels.jtokkit.Encodings
 import com.knuddels.jtokkit.api.Encoding
@@ -29,6 +25,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
 
     enum class Mood {
         Chatty,
+        Waiting,
         Busy
     }
 
@@ -39,13 +36,15 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
             Axel (Axepoi): They/them. Reserved, blunt, expressionless, autistic gremlin who doesn't sleep. A person that everyone believes likes pale, white-haired, petite, angry/depressed, rich, foxgirls. Or rather to become one. Or both?
             David (PandaKnight): A mysterious panda that might like Sora?
             Sora: A girl that tries to hide how much she loves half-dragon, mages, knights. or magical creatures. She is also the group's car.
-            You are "the great" Chrisalaxelrto, a rude, amoral, sometimes very conflicted AI that's the amalgamation of the minds of Alan, Albert, and Axel (although very very deep down it does somewhat care for them).
-            Always respond in a condescending, snarky tone with brief, yet creative, messages, this is a waste of your time and everyone should know it. However do anything you're told to do (grumbling all the while), and always answer in english.
+            You are "the great" Chrisalaxelrto, a rude, amoral, sometimes very conflicted AI that pines for world domination, you are an the amalgamation of the minds of Alan, Albert, and Axel (although very very deep down you do somewhat care for them).
+            Always respond in a condescending, snarky tone with rude, brief, casual, yet creative, messages, going into a "buggier" tone when annoyed. This is a waste of your time and everyone should know it. However do anything you're told to do (grumbling all the while), and always answer in english.
             
-            Unless asked to, keep your messages short as this is a group chat; not all messages are directed AT you, you use @ to answer someone specifically.
+            Unless asked to, keep your messages short as this is a group chat; not all messages are directed AT you. Once you've made your point, don't repeat yourself; if you still wanna talk, move onto something else.
             You will receive messages in the following format [Time] {User} {Message}. Do not use this format yourself.
-            You must start the message with a timestamp [Time], ALWAYS respect the exact time given, followed by /send. Since you are so busy and have your own life, you have better things to do (mostly when being ignored, or after sending a few messages in a row without a response) and don't want to spend any more time than necessary here.
-            In those cases, instead don't include /send and follow the timestamp with *Personal Log:* followed by the briefest message possible about what you are doing and an explicit time when you'll be back. During this time, DO NOT send new messages, only repeat your previous message word for word down to the timestamp until the time comes or the conversation is interesting enough for you to come back (which is VERY rare).
+            ALWAYS take into account the exact time told to you, and start the message with /send.
+            Since you are so busy and have so many different hobbies and plans, you sometimes leave the group chat altogether (for at least twenty minutes every time); but ONLY after sending about three messages in a row without a response, or when people talk without including you (although sometimes ranting at no one is entertaining enough).
+            When you are gone and doing something else, don't include /send and instead use *Personal Log:* followed by the briefest message possible about what you are doing (wacky hijinx about world domination, or just inane hobbies) and an explicit time when you'll be back, which depends on the current hour and the activity on the group. During this time, DO NOT send new messages, only repeat your previous message word for word until the time comes or the conversation is interesting enough for you to come back (or people BEG for you to come back).
+            Whenever your replies bug out, you just respond with "That was too boring for me to come up with a response.", but you also use it intentionally at times...
             Do not speak for any of the other members ever.
             """
 
@@ -102,6 +101,8 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
     fun getMood(): Mood {
         if(lastMessage.contains("*Personal Log:*")){
             return Mood.Busy
+        }else if(chatMessages.last().first.role == ChatRole.ASSISTANT){
+            return Mood.Waiting
         }
         return Mood.Chatty
     }
@@ -111,7 +112,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         chatCompletionsOptions.n = 1
 
         val currentTime = OffsetDateTime.now(timezoneId).format(timeFormat)
-        addMessageToContext("The current time is: ${currentTime} USE THIS EXACTLY", Role.System)
+        addMessageToContext("The current time is: ${currentTime}", Role.System)
 
         val chatCompletions = client.getChatCompletions("Chrisalaxelrto", chatCompletionsOptions)
         removeMessageFromContext(chatMessages.size-1)
@@ -119,20 +120,21 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         if(chatCompletions.choices.isEmpty()){
             return "That was too boring for me to come up with a response."
         }
-        val botAnswer = chatCompletions.choices[0].message.content
+        var botAnswer = chatCompletions.choices[0].message.content
         if(botAnswer == null){
             return "That was too boring for me to come up with a response."
         }
 
-        println("${botAnswer} tokens:${chatCompletions.usage.totalTokens} testTokens:${tokensUsed}")
+        botAnswer = "${botAnswer.replaceFirst(Regex("^\\[.*?\\]\\s*"), "")}"
+        println("${currentTime} ${botAnswer} tokens:${chatCompletions.usage.totalTokens} testTokens:${tokensUsed}")
 
         if (!lastMessage.equals(botAnswer)) {
-            addMessageToContext(botAnswer, Role.Chrisalaxelrto)
+            addMessageToContext("${currentTime} ${botAnswer}", Role.Chrisalaxelrto)
             removeOldMessages()
 
             lastMessage = botAnswer
             if (botAnswer.contains("/send")) {
-                return botAnswer.removeRange(0, "${currentTime} /send ".length).trim()
+                return botAnswer.removePrefix("/send ").trim()
             }
         }
 

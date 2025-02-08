@@ -26,8 +26,10 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI) : ListenerAdapter() {
         var delay = 10L
 
         delay = when (chatAi.getMood()){
-            Mood.Chatty -> Random.nextLong(5, 10)
-            Mood.Waiting -> Random.nextLong(10, 15)
+            Mood.Answering -> Random.nextLong(5, 10)
+            Mood.Chatty -> Random.nextLong(10, 15)
+            Mood.Waiting -> Random.nextLong(30, 45)
+            Mood.Bored -> Random.nextLong(60, 120)
             Mood.Busy -> Random.nextLong(1200, 1800)
         }
 

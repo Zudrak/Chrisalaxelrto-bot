@@ -33,7 +33,6 @@ class InspireCommand(
         val mp3Index = apiResponse.indexOf("\"mp3\": ")
         val mp3 = apiResponse.substring(mp3Index).dropLast(2).drop(8)
         apm.loadItem(mp3, Loader(this, player, mp3))
-
     }
 
     fun CommandContext.ensureVoiceChannel(): Boolean {

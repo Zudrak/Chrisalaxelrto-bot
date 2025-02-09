@@ -25,6 +25,7 @@ class LavaplayerConfig(var botProps: BotProps) {
 
         apm.registerSourceManager(ytSourceManager)
         AudioSourceManagers.registerRemoteSources(apm, com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager::class.java)
+        AudioSourceManagers.registerLocalSource(apm)
         return apm
     }
 

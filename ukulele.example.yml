@@ -9,4 +9,5 @@ config:
   azureToken: ""         # Azure token for API calls
   azureEndpoint: ""      # Azure endpoint for API calls
   openAIToken: ""        # OpenAI token for API calls
+  elevenLabsToken: ""    # ElevenLabs token for API calls
   ytAuthToken: ""

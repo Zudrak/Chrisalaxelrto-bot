@@ -1,12 +1,10 @@
 package dev.arbjerg.ukulele.command
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame
 import dev.arbjerg.ukulele.audio.Player
 import dev.arbjerg.ukulele.config.BotProps
 import dev.arbjerg.ukulele.features.HelpContext
@@ -15,7 +13,6 @@ import dev.arbjerg.ukulele.jda.CommandContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.dv8tion.jda.api.Permission
-import okhttp3.internal.wait
 import org.springframework.stereotype.Component
 import java.io.DataOutputStream
 import java.io.File

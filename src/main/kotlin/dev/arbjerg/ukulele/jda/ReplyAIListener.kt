@@ -86,6 +86,14 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
         runBlocking {
             val guild = guildProperties.getAwait(event.guild.idLong)
 
+            if(guild.textChannel != null && "<#${event.channel.id}>" == guild.textChannel){
+                lastChannel = event.channel
+            }else if(lastChannel == null) {
+                lastChannel = event.channel
+            }else if(event.channel != lastChannel) {
+                lastChannel = event.channel
+            }
+
             if (guild.textChannel == null || "<#${event.channel.id}>" == guild.textChannel){
                 scheduleTask()
                 chatAi.chatMessageReceived(event.message.timeCreated, replaceAts(event.message.contentRaw), event.member!!)

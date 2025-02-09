@@ -50,6 +50,7 @@ jobs:
                 ytAuthToken: "${{ secrets.YT_AUTH_TOKEN }}" 
                 visitorData: "${{ secrets.YT_VISITOR_DATA }}" 
                 poToken: "${{ secrets.YT_PO_TOKEN }}" 
+                elevenLabsToken: "${{ secrets.ELEVENLABS_TOKEN }}"
 
 
         - uses: actions/download-artifact@v4

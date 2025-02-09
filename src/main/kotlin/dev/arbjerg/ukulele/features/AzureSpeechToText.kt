@@ -20,28 +20,28 @@ class AzureSpeechToText(val botProps: BotProps) {
     suspend fun speechToText(stream: PullAudioInputStreamCallback) : String? {
         var out = "-"
         runBlocking {
-            val audioFormat = AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
+            val audioFormat = AudioStreamFormat.getDefaultInputFormat()
             val audioStream = AudioInputStream.createPullStream(stream, audioFormat)
             val audioConfig = AudioConfig.fromStreamInput(audioStream)
 
             val speechRecognizer = SpeechRecognizer(speechConfig, audioConfig)
 
-            speechRecognizer.recognizing.addEventListener { _, eventArgs ->
-                var result = eventArgs.result
-                log.info("RECOGNIZING Result Text: ${eventArgs.result.text} Reason: ${eventArgs.result.reason}")
-            }
-
             speechRecognizer.recognized.addEventListener { _, eventArgs ->
-                var result = eventArgs.result
-                log.info("RECOGNIZED Result Text: ${eventArgs.result.text} Reason: ${eventArgs.result.reason}")
-                out += result.text
+                val result = eventArgs.result
+                log.info("RECOGNIZED: Text=${result.text}")
+                out += "${result.text}\n"
             }
 
+            speechRecognizer.canceled.addEventListener { _, eventArgs ->
+                log.warn("CANCELED: Reason=${eventArgs.reason}")
+            }
+
+            delay(500)
             speechRecognizer.startContinuousRecognitionAsync().get()
             log.info("Starting Speech Recognition....")
 
             runBlocking {
-                delay(20000)
+                delay(30000)
                 speechRecognizer.stopContinuousRecognitionAsync().get()
             }
 

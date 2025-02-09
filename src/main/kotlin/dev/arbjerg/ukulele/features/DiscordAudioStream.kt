@@ -1,6 +1,7 @@
 package dev.arbjerg.ukulele.features
 
 import DiscordAudioHandler
+import com.microsoft.cognitiveservices.speech.audio.AudioOutputStream
 import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStreamCallback
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -11,42 +12,46 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.sound.sampled.AudioFileFormat
+import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
-
 internal class DiscordAudioStream(private val audioHandler: DiscordAudioHandler) : PullAudioInputStreamCallback() {
     val log: Logger = LoggerFactory.getLogger(javaClass)
     private val fileBuffer = ByteArrayOutputStream()
+
+    private val targetFormat = AudioFormat(
+        AudioFormat.Encoding.PCM_SIGNED,
+        16000f,
+        16,
+        1,
+        2,
+        16000f,
+        false
+    )
     override fun read(buffer: ByteArray): Int {
+
         var size = 0
         runBlocking {
-            var chunk = audioHandler.getAudioChunk()
+            val chunk = audioHandler.getAudioChunk()
+            val resampledStream = AudioSystem.getAudioInputStream(targetFormat, AudioInputStream(ByteArrayInputStream(chunk), AudioReceiveHandler.OUTPUT_FORMAT, chunk.size.toLong()))
+            val resampledChunk = resampledStream.readAllBytes()
 
-            while(chunk == null) {
-                chunk = audioHandler.getAudioChunk()
-                delay(100)
-            }
-
-            fileBuffer.write(chunk)
-            buffer.let {
-                size = minOf(buffer.size, chunk.size)
-                System.arraycopy(chunk, 0, buffer, 0, size)
-            }
+            size = resampledChunk.size
+            resampledChunk.copyInto(buffer)
+            fileBuffer.write(buffer)
         }
-
         return size
     }
 
     override fun close() {
         fileBuffer.reset()
-        // Clean up resources if needed
     }
 
     fun saveToFile() {
         // Save the audio to a file
         var file = File("audio.wav")
         var pcmData = fileBuffer.toByteArray()
-        AudioSystem.write(AudioInputStream(ByteArrayInputStream(pcmData), AudioReceiveHandler.OUTPUT_FORMAT, pcmData.size.toLong()), AudioFileFormat.Type.WAVE, file)
+        AudioSystem.write(AudioInputStream(ByteArrayInputStream(pcmData), targetFormat, pcmData.size.toLong()), AudioFileFormat.Type.WAVE, file)
     }
 }
 

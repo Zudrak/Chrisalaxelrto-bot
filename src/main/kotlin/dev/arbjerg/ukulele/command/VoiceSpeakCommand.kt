@@ -31,7 +31,7 @@ class VoiceSpeakCommand (
     override suspend fun CommandContext.invoke() {
 
 
-        val url = URL("https://api.elevenlabs.io/v1/text-to-speech/IKne3meq5aSn9XLyUdCD")
+        val url = URL("https://api.elevenlabs.io/v1/text-to-speech/GBv7mTt0atIp3Br8iCZE")
         val conn = url.openConnection() as HttpURLConnection
         conn.requestMethod = "POST"
         conn.doOutput = true
@@ -42,6 +42,7 @@ class VoiceSpeakCommand (
 
 
         if (!ensureVoiceChannel()) return
+        guild.audioManager.sendingHandler = player
 
         val postData = "" +
                 "{\n" +

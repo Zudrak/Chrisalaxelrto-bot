@@ -48,7 +48,8 @@ data class GuildProperties(
         @Id val guildId: Long,
         var volume: Int = 100,
         var prefix: String? = null,
-        var musicChannel: String? = null
+        var musicChannel: String? = null,
+        var textChannel: String? = null
 ) : Persistable<Long> {
     @Transient var new: Boolean = false
     override fun getId() = guildId

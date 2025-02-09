@@ -34,6 +34,11 @@ class CommandContext(
         lateinit var commandManager: CommandManager
     }
 
+    enum class ChannelType {
+        Music,
+        Text
+    }
+
     val player: Player by lazy { beans.players.get(guild, guildProperties) }
 
     /** The command argument text after the trigger */
@@ -70,8 +75,21 @@ class CommandContext(
         channel.sendMessage(help.buildMessage()).queue()
     }
 
-    fun replyWrongMusicChannel() {
-        replyTTS("You fucking idiot, go to the correct channel next time.")
+    fun checkChannel(channelType: ChannelType, channel: String): Boolean {
+        when(channelType){
+            ChannelType.Music -> {
+                if("<#${channel}>" != guildProperties.musicChannel && guildProperties.musicChannel != null){
+                    replyTTS("You fucking idiot, go to the correct channel next time.")
+                    return false
+                }
+            }
+            ChannelType.Text -> {
+                if("<#${channel}>" != guildProperties.textChannel && guildProperties.textChannel != null){
+                    return false
+                }
+            }
+        }
+        return true
     }
 
     fun handleException(t: Throwable) {

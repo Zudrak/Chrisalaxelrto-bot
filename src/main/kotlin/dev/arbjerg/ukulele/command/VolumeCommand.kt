@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 class VolumeCommand(val players: PlayerRegistry) : Command("volume", "v") {
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         if (argumentText.isBlank()) return reply("The volume is set to ${player.volume}%.")
 

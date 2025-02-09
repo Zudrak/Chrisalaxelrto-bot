@@ -17,7 +17,7 @@ class NowPlayingCommand : Command ("nowplaying", "np") {
 
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         if (player.tracks.isEmpty())
             return reply("Not playing anything.")

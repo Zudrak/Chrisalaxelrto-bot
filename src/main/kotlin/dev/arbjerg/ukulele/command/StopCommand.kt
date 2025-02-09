@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 class StopCommand : Command("stop") {
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         val skipped = player.tracks.size
 

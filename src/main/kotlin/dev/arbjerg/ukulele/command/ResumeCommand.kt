@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 class ResumeCommand : Command ("resume") {
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         if (!player.isPaused) return reply("Player is already playing.")
 

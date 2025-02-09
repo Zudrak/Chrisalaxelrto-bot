@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 class RepeatCommand : Command ("repeat", "loop", "r") {
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         player.isRepeating = !player.isRepeating
         if (player.isRepeating) {reply("Repeating is now enabled.")}

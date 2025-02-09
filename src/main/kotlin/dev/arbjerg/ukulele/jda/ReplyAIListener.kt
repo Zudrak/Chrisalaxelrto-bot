@@ -1,5 +1,9 @@
 
 package dev.arbjerg.ukulele.jda
+import dev.arbjerg.ukulele.audio.PlayerRegistry
+import dev.arbjerg.ukulele.config.BotProps
+import dev.arbjerg.ukulele.data.GuildProperties
+import dev.arbjerg.ukulele.data.GuildPropertiesService
 import kotlinx.coroutines.*
 import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -12,9 +16,10 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI.Mood
+import org.springframework.stereotype.Component
 
 @Service
-class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI) : ListenerAdapter() {
+class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: GuildPropertiesService) : ListenerAdapter() {
     final val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
     var lastChannel : MessageChannel? = null
 
@@ -78,15 +83,14 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI) : ListenerAdapter() {
         if (event.author.isBot || event.member == null) {
             return
         }
+        runBlocking {
+            val guild = guildProperties.getAwait(event.guild.idLong)
 
-        if(lastChannel == null) {
-            lastChannel = event.channel
-            scheduleTask()
-        }else if(event.channel != lastChannel) {
-            lastChannel = event.channel
+            if (guild.textChannel == null || "<#${event.channel.id}>" == guild.textChannel){
+                scheduleTask()
+                chatAi.chatMessageReceived(event.message.timeCreated, replaceAts(event.message.contentRaw), event.member!!)
+            }
         }
-
-        chatAi.chatMessageReceived(event.message.timeCreated, replaceAts(event.message.contentRaw), event.member!!)
     }
 
 }

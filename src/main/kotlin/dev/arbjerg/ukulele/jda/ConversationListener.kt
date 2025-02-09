@@ -1,7 +1,6 @@
 package dev.arbjerg.ukulele.jda
 
 import ConversationAudioHandler
-import dev.arbjerg.ukulele.audio.PCMToWAVConverter
 import net.dv8tion.jda.api.audio.AudioReceiveHandler
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 import java.io.File
 import javax.sound.sampled.AudioFileFormat
-import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 

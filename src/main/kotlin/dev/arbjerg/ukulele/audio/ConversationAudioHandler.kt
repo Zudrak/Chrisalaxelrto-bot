@@ -7,7 +7,7 @@ import java.util.*
 class ConversationAudioHandler : AudioReceiveHandler {
     private val SAMPLE_RATE = 48000 // 48 kHz
     private val CHANNELS = 2 // Stereo
-    private val RECORDING_SECONDS = 60 * 5
+    private val RECORDING_SECONDS = 20
     private val BUFFER_SIZE = SAMPLE_RATE * CHANNELS * RECORDING_SECONDS // Buffer for 10 seconds
 
     private val audioBuffer: Queue<ByteArray> = LinkedList()

@@ -1,57 +1,73 @@
 
 package dev.arbjerg.ukulele.jda
-
-
-import dev.arbjerg.ukulele.config.BotProps
-import dev.arbjerg.ukulele.data.GuildPropertiesService
+import kotlinx.coroutines.*
+import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
+import kotlin.random.Random
+import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI.Mood
 
 @Service
-class ReplyAIListener(final var botProps: BotProps, val guildProperties: GuildPropertiesService, commands: Collection<Command>,val contextBeans: CommandContext.Beans) : ListenerAdapter() {
-    private val log: Logger = LoggerFactory.getLogger(EventHandler::class.java)
-    private val registry: Map<String, Command>
+class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI) : ListenerAdapter() {
+    final val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+    var lastChannel : MessageChannel? = null
 
-    init {
-        val map = mutableMapOf<String, Command>()
-        commands.forEach { c ->
-            map[c.name] = c
-            c.aliases.forEach { map[it] = c }
+    @OptIn(DelicateCoroutinesApi::class)
+    private final fun scheduleTask() {
+        if(lastChannel == null) {
+            return
         }
-        registry = map
+        var delay = 10L
+
+        delay = when (chatAi.getMood()){
+            Mood.Answering -> Random.nextLong(5, 10)
+            Mood.Chatty -> Random.nextLong(10, 15)
+            Mood.Waiting -> Random.nextLong(30, 45)
+            Mood.Bored -> Random.nextLong(60, 120)
+            Mood.Busy -> Random.nextLong(1200, 1800)
+        }
+
+        scheduler.schedule({
+            var msg : String? = ""
+            val job = GlobalScope.launch {
+                msg = chatAi.reply()
+            }
+
+            runBlocking {
+                while(!job.isCompleted) {
+                    delay(2000)
+                }
+                job.join()
+                if(!msg.isNullOrBlank()){
+                    lastChannel!!.sendTyping().queue()
+                    delay(5000)
+                    lastChannel!!.sendMessage(msg!!).queue()
+                }
+            }
+            scheduleTask() // Reschedule the task with a new random delay
+        }, delay, TimeUnit.SECONDS)
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onMessageReceived(event: MessageReceivedEvent) {
-        val guild = event.guild
-        val mention = Regex("^(<@!?${event.guild.selfMember.id}>\\s*)").find(event.message.contentRaw)?.value
-
-        if (event.author.isBot || mention == null) {
+        if (event.author.isBot || event.member == null) {
             return
         }
 
-        GlobalScope.launch {
-            val guildProperties = guildProperties.getAwait(guild.idLong)
-            val channel = event.channel
-            val name = "talk"
-            val trigger = "<@${event.guild.selfMember.id}>"
-            val command = registry[name] ?: return@launch
-
-            val ctx = event.member?.let {
-                CommandContext(contextBeans, guildProperties, guild, channel.asTextChannel(),
-                    it, event.message, command, botProps.prefix, trigger)
-            }
-
-            if (ctx != null) {
-                command.invoke0(ctx)
-            }
+        if(lastChannel == null) {
+            lastChannel = event.channel
+            scheduleTask()
+        }else if(event.channel != lastChannel) {
+            lastChannel = event.channel
         }
+
+        chatAi.chatMessageReceived(event.message.timeCreated, event.message.contentRaw, event.member!!)
     }
 
 }

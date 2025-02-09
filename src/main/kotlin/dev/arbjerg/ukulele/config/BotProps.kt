@@ -13,6 +13,9 @@ class BotProps(
         var announceTracks: Boolean = false,
         var azureToken: String = "",
         var openAIToken: String = "",
+        var azureEndpoint: String = "",
         var elevenLabsToken: String = "",
-        var azureEndpoint: String = ""
+        var ytAuthToken: String = "",
+        var visitorData: String = "",
+        var poToken: String = ""
 )

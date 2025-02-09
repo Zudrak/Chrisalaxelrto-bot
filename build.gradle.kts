@@ -15,12 +15,14 @@ repositories {
     mavenCentral()
     maven { url = uri("https://m2.dv8tion.net/releases") }
     maven { url = uri("https://jitpack.io") }
+    maven { url = uri("https://maven.lavalink.dev/snapshots") }
+    maven { url = uri("https://maven.lavalink.dev/releases") }
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.13")
-    //implementation("com.sedmelluq:lavaplayer:1.3.78")
-    implementation("com.github.walkyst:lavaplayer-fork:1.4.3")
+    implementation("net.dv8tion:JDA:5.1.1")
+    implementation("dev.arbjerg:lavaplayer:2.2.2")
+    implementation("dev.lavalink.youtube:v2:1.10.2")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 
     runtimeOnly("com.h2database:h2")
@@ -45,14 +47,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
-    
-    // import Kotlin API client BOM
-    implementation(platform("com.aallam.openai:openai-client-bom:3.2.0"))
 
-// define dependencies without versions
-    implementation("com.aallam.openai:openai-client")
-    implementation("io.ktor:ktor-client-okhttp")
-
+    implementation("com.azure:azure-ai-openai:1.0.0-beta.13")
+    implementation("com.knuddels:jtokkit:1.1.0")
 
 }
 

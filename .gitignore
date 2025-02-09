@@ -1,5 +1,6 @@
 ukulele.jar
 audio.mp3
+output.wav
 *.mv.db
 *.trace.db
 HELP.md

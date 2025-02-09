@@ -18,7 +18,7 @@ class QueueCommand(
 
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         reply(printQueue(player, argumentText.toIntOrNull() ?: 1))
     }

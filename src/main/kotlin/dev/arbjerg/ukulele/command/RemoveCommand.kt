@@ -9,7 +9,7 @@ import java.util.regex.Pattern
 class RemoveCommand : Command("remove", "del", "rem") {
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         val pattern = Pattern.compile("(|-)\\d+")
         val matcher = pattern.matcher(argumentText)

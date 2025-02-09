@@ -1,7 +1,6 @@
 package dev.arbjerg.ukulele.command
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import dev.arbjerg.ukulele.audio.PlayerRegistry
 import dev.arbjerg.ukulele.features.HelpContext
 import dev.arbjerg.ukulele.jda.Command
 import dev.arbjerg.ukulele.jda.CommandContext
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Component
 class SkipCommand : Command("skip", "s") {
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         when {
             argumentText.isBlank() -> skipNext()

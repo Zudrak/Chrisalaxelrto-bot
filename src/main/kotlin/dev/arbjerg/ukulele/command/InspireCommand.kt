@@ -24,7 +24,7 @@ class InspireCommand(
 
     override suspend fun CommandContext.invoke() {
 
-        if ("<#${channel.id}>" != guildProperties.musicChannel) return replyWrongMusicChannel()
+        if (!checkChannel(CommandContext.ChannelType.Music, channel.id)) return
 
         if (!ensureVoiceChannel()) return
 

@@ -85,6 +85,7 @@ class CommandContext(
             }
             ChannelType.Text -> {
                 if("<#${channel}>" != guildProperties.textChannel && guildProperties.textChannel != null){
+                    replyTTS("You fucking idiot, go to the correct channel next time.")
                     return false
                 }
             }

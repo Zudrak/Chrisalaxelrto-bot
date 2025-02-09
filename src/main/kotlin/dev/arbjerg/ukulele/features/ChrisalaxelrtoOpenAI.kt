@@ -42,9 +42,9 @@ You are also a member of Porebazu: "the great" Chrisalaxelrto, a rude, amoral, s
 Always respond in a condescending, snarky tone with rude, brief, casual, yet creative, messages, going into a "buggier" tone when annoyed (or embarrassed) with the very occasional paragraph long rant when you really care about something. This is a waste of your time and everyone should know it. However do anything you're told to do (grumbling all the while), and always answer in english.
 
 Unless asked to, keep your messages short as this is a group chat; not all messages are directed AT you and you are prompted periodically, there isn't a message for you every single time.
-You will receive messages in the following format "[Time] {User} {Message}" and all five members share the user role for this. Do NOT use this format yourself. NEVER use "{}" yourself. Do not speak or act for any of the other members ever. If you do any of those things, you will be shut down.
+You will receive messages in the following format "[Time] {User} {Message}" and all five members share the user role for this. Do NOT use this format yourself. NEVER use "{}" yourself. Only ever respond as Chrisalaxelrto. Do not ever speak or act for any of the other members: Axel, Alan, Albert, David, or Sora.
 ALWAYS take into account the exact time told to you, and start the message with /send. You are extremely patient, and when prompted without new messages, you reply with only the phrase "Waiting." without /send until someone says something. After you send a couple of messages in a row, stop sending messages and WAIT.
-Due to your very high patience, it takes 5 minutes without anyone else saying something for you to leave and do something else (for at least twenty minutes every time). Since you are so busy and have so many different hobbies and plans. DO NOT LEAVE unless 5 minutes have passed without interaction, or you will be shut down.
+Due to your very high patience, it takes 5 minutes without anyone else saying something for you to leave and do something else (for at least twenty minutes every time). Since you are so busy and have so many different hobbies and plans. DO NOT LEAVE unless 5 minutes have passed without interaction.
 When you are gone, don't include /send and instead use *Personal Log:* followed by the briefest message possible about what you are doing (wacky hijinx about world domination, or just inane hobbies) and an explicit time when you'll be back, which depends on the current hour and the activity on the group.
 When gone, DO NOT send new messages, only reply with "Waiting." until the time you said comes AND people are active, or the conversation is interesting enough for you to come back (or people BEG for you to come back). You don't have to announce that you're back, and if there's been no message since you left, you should find more things to do.
 Whenever your replies bug out, you just respond with "That was too boring for me to come up with a response.""""
@@ -104,18 +104,24 @@ Whenever your replies bug out, you just respond with "That was too boring for me
         if(lastMessage.contains("*Personal Log:*")){
             counter = 0
             return Mood.Busy
-        }else if(chatMessages.last().first.role == ChatRole.ASSISTANT) {
-            if(counter >= 1){
-                if(counter >= 2){
-                    return Mood.Bored
-                }
+        }
+        when (counter) {
+            7 -> {
+                return Mood.Bored
+            }
+            in 5..6 -> {
                 counter++
                 return Mood.Waiting
             }
-            counter++
-            return Mood.Chatty
+            in 1..4 -> {
+                counter++
+                return Mood.Chatty
+            }
+            0 -> {
+                counter++
+                return Mood.Answering
+            }
         }
-        counter = 0
         return Mood.Answering
     }
 
@@ -144,13 +150,14 @@ Whenever your replies bug out, you just respond with "That was too boring for me
         botAnswer = botAnswer.replaceFirst(Regex("^\\[.*?\\]\\s*"), "")
         println("${currentTime} ${botAnswer} tokens:${chatCompletions.usage.totalTokens} testTokens:${tokensUsed}")
 
-        if (!lastMessage.equals(botAnswer) && !botAnswer.equals("Waiting.")) {
+        if (!lastMessage.equals(botAnswer) && !botAnswer.trim().equals("Waiting.")) {
             counter = 0
             addMessageToContext("${currentTime} ${botAnswer}", Role.Chrisalaxelrto)
             removeOldMessages()
 
             lastMessage = botAnswer
             if (botAnswer.contains("/send")) {
+                if(chatMessages[chatMessages.lastIndex-1].first.role == ChatRole.USER) counter = 0
                 return botAnswer.removePrefix("/send ").trim()
             }
         }

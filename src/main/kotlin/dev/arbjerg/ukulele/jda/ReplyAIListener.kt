@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component
 class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: GuildPropertiesService) : ListenerAdapter() {
     final val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
     var lastChannel : MessageChannel? = null
+    var lastDelay: Long = 5L
 
     val usernameList: List<Pair<Regex, String>> = listOf(
         Regex("<@889612265920266251>", RegexOption.IGNORE_CASE) to "@Chrisalaxelrto",
@@ -37,15 +38,7 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
         if(lastChannel == null) {
             return
         }
-        var delay = 10L
-
-        delay = when (chatAi.getMood()){
-            Mood.Answering -> Random.nextLong(5, 10)
-            Mood.Chatty -> Random.nextLong(10, 15)
-            Mood.Waiting -> Random.nextLong(20, 35)
-            Mood.Bored -> Random.nextLong(40, 55)
-            Mood.Busy -> Random.nextLong(1200, 1800)
-        }
+        var delay = lastDelay
 
         scheduler.schedule({
             var msg : String? = ""
@@ -62,6 +55,13 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
                     lastChannel!!.sendTyping().queue()
                     delay(5000)
                     lastChannel!!.sendMessage(msg!!).queue()
+                }
+                lastDelay = when (chatAi.getMood()){
+                    Mood.Answering -> Random.nextLong(5, 10)
+                    Mood.Chatty -> Random.nextLong(10, 15)
+                    Mood.Waiting -> Random.nextLong(20, 35)
+                    Mood.Bored -> Random.nextLong(40, 55)
+                    Mood.Busy -> Random.nextLong(1200, 1800)
                 }
             }
             scheduleTask() // Reschedule the task with a new random delay
@@ -86,16 +86,20 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
         runBlocking {
             val guild = guildProperties.getAwait(event.guild.idLong)
 
-            if(guild.textChannel != null && "<#${event.channel.id}>" == guild.textChannel){
+            if(lastChannel == null && guild.textChannel != null && "<#${event.channel.id}>" == guild.textChannel){
                 lastChannel = event.channel
-            }else if(lastChannel == null) {
-                lastChannel = event.channel
-            }else if(event.channel != lastChannel) {
-                lastChannel = event.channel
+                scheduleTask()
+            }
+            if(guild.textChannel == null) {
+                if (lastChannel == null) {
+                    lastChannel = event.channel
+                    scheduleTask()
+                } else if (event.channel != lastChannel) {
+                    lastChannel = event.channel
+                }
             }
 
             if (guild.textChannel == null || "<#${event.channel.id}>" == guild.textChannel){
-                scheduleTask()
                 chatAi.chatMessageReceived(event.message.timeCreated, replaceAts(event.message.contentRaw), event.member!!)
             }
         }

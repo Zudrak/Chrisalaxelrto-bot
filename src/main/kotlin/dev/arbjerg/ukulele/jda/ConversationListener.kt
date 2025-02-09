@@ -1,29 +1,27 @@
 package dev.arbjerg.ukulele.jda
 
-import ConversationAudioHandler
+import DiscordAudioHandler
 import dev.arbjerg.ukulele.features.AzureSpeechToText
+import dev.arbjerg.ukulele.features.DiscordAudioStream
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.dv8tion.jda.api.audio.AudioReceiveHandler
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.io.ByteArrayInputStream
-import java.io.File
-import javax.sound.sampled.AudioFileFormat
-import javax.sound.sampled.AudioInputStream
-import javax.sound.sampled.AudioSystem
 
 @Service
 class ConversationListener (final var speechToText: AzureSpeechToText) : ListenerAdapter() {
-    private var ah = 0
+    val log: Logger = LoggerFactory.getLogger(javaClass)
     private var audioChannel : VoiceChannel? = null
-    private val conversationHandler = ConversationAudioHandler()
+    private val conversationHandler = DiscordAudioHandler()
 
     init {
-        speechToText.setupAudioStream(conversationHandler)
     }
     override fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
         if(event.member.user.id != event.jda.selfUser.id) {
@@ -39,13 +37,20 @@ class ConversationListener (final var speechToText: AzureSpeechToText) : Listene
 
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onMessageReceived(event: MessageReceivedEvent) {
         if(event.message.contentRaw.startsWith("voice-reply")) {
             try {
+                event.guild.audioManager.openAudioConnection(event.member?.voiceState?.channel)
+
                 GlobalScope.launch {
-                    var text = speechToText.speechToText()
+                    conversationHandler.clear()
+                    val stream = DiscordAudioStream(conversationHandler)
+                    val text = speechToText.speechToText(stream)
                     event.channel.sendMessage(text ?: "No text found").queue()
+                    stream.saveToFile()
                 }
+
             } catch (e: Exception) {
                 e.printStackTrace()
             }

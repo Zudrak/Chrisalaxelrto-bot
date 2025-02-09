@@ -1,6 +1,9 @@
 package dev.arbjerg.ukulele.jda
 
 import ConversationAudioHandler
+import dev.arbjerg.ukulele.features.AzureSpeechToText
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.audio.AudioReceiveHandler
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
@@ -14,10 +17,14 @@ import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
 
 @Service
-class ConversationListener () : ListenerAdapter() {
-
+class ConversationListener (final var speechToText: AzureSpeechToText) : ListenerAdapter() {
+    private var ah = 0
     private var audioChannel : VoiceChannel? = null
     private val conversationHandler = ConversationAudioHandler()
+
+    init {
+        speechToText.setupAudioStream(conversationHandler)
+    }
     override fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
         if(event.member.user.id != event.jda.selfUser.id) {
             return;
@@ -33,14 +40,12 @@ class ConversationListener () : ListenerAdapter() {
     }
 
     override fun onMessageReceived(event: MessageReceivedEvent) {
-        if(event.message.contentRaw.startsWith("record")) {
-            // After receiving some audio data in the handler...
-            val pcmData = conversationHandler.getLast10SecondsOfAudio()
-            val outputPath = "output.wav"
-
+        if(event.message.contentRaw.startsWith("voice-reply")) {
             try {
-                val file = File(outputPath)
-                AudioSystem.write(AudioInputStream(ByteArrayInputStream(pcmData), AudioReceiveHandler.OUTPUT_FORMAT, pcmData.size.toLong()), AudioFileFormat.Type.WAVE, file)
+                GlobalScope.launch {
+                    var text = speechToText.speechToText()
+                    event.channel.sendMessage(text ?: "No text found").queue()
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

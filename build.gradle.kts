@@ -51,6 +51,8 @@ dependencies {
     implementation("com.azure:azure-ai-openai:1.0.0-beta.13")
     implementation("com.knuddels:jtokkit:1.1.0")
 
+    implementation( group= "com.microsoft.cognitiveservices.speech", name= "client-sdk", version= "1.42.0", ext= "jar")
+
 }
 
 tasks.withType<BootJar> {

@@ -51,6 +51,7 @@ jobs:
                 visitorData: "${{ secrets.YT_VISITOR_DATA }}" 
                 poToken: "${{ secrets.YT_PO_TOKEN }}" 
                 elevenLabsToken: "${{ secrets.ELEVENLABS_TOKEN }}"
+                guildId: "${{ secrets.DISCORD_GUILD_ID }}"
 
 
         - uses: actions/download-artifact@v4

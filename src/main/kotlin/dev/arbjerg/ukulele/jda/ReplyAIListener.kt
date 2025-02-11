@@ -19,7 +19,7 @@ import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI.Mood
 import org.springframework.stereotype.Component
 
 @Service
-class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: GuildPropertiesService) : ListenerAdapter() {
+class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: GuildPropertiesService, val botProps: BotProps) : ListenerAdapter() {
     final val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
     var lastChannel : MessageChannel? = null
     var lastDelay: Long = 5L
@@ -83,24 +83,30 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
         if (event.author.isBot || event.member == null) {
             return
         }
-        runBlocking {
-            val guild = guildProperties.getAwait(event.guild.idLong)
+        if(event.guild.id == botProps.guildId) {
+            runBlocking {
+                val guild = guildProperties.getAwait(event.guild.idLong)
 
-            if(lastChannel == null && guild.textChannel != null && "<#${event.channel.id}>" == guild.textChannel){
-                lastChannel = event.channel
-                scheduleTask()
-            }
-            if(guild.textChannel == null) {
-                if (lastChannel == null) {
+                if (lastChannel == null && guild.textChannel != null && "<#${event.channel.id}>" == guild.textChannel) {
                     lastChannel = event.channel
                     scheduleTask()
-                } else if (event.channel != lastChannel) {
-                    lastChannel = event.channel
                 }
-            }
+                if (guild.textChannel == null) {
+                    if (lastChannel == null) {
+                        lastChannel = event.channel
+                        scheduleTask()
+                    } else if (event.channel != lastChannel) {
+                        lastChannel = event.channel
+                    }
+                }
 
-            if (guild.textChannel == null || "<#${event.channel.id}>" == guild.textChannel){
-                chatAi.chatMessageReceived(event.message.timeCreated, replaceAts(event.message.contentRaw), event.member!!)
+                if (guild.textChannel == null || "<#${event.channel.id}>" == guild.textChannel) {
+                    chatAi.chatMessageReceived(
+                        event.message.timeCreated,
+                        replaceAts(event.message.contentRaw),
+                        event.member!!
+                    )
+                }
             }
         }
     }

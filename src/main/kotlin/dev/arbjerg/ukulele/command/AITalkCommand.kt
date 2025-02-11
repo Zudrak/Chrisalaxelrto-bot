@@ -1,5 +1,6 @@
 package dev.arbjerg.ukulele.command
 
+import dev.arbjerg.ukulele.config.BotProps
 import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI
 import dev.arbjerg.ukulele.features.HelpContext
 import dev.arbjerg.ukulele.jda.Command
@@ -9,22 +10,24 @@ import kotlinx.coroutines.launch
 import org.springframework.stereotype.Component
 
 @Component
-class AITalkCommand(var chatAi: ChrisalaxelrtoOpenAI) : Command("talk") {
+class AITalkCommand(var chatAi: ChrisalaxelrtoOpenAI, val botProps: BotProps) : Command("talk") {
     override suspend fun CommandContext.invoke() {
-        if(checkChannel(CommandContext.ChannelType.Text, channel.id)) {
-            channel.sendTyping().queue()
+        if(channel.guild.id == botProps.guildId){
+            if(checkChannel(CommandContext.ChannelType.Text, channel.id)) {
+                channel.sendTyping().queue()
 
-            log.info(channel.toString())
+                log.info(channel.toString())
 
-            if (argumentText.trim().isEmpty()) {
-                return
-            }
+                if (argumentText.trim().isEmpty()) {
+                    return
+                }
 
-            GlobalScope.launch {
-                try {
-                    reply(chatAi.reply() ?: "")
-                } catch (e: Exception) {
-                    log.error("$e")
+                GlobalScope.launch {
+                    try {
+                        reply(chatAi.reply() ?: "")
+                    } catch (e: Exception) {
+                        log.error("$e")
+                    }
                 }
             }
         }

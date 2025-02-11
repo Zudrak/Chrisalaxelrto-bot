@@ -11,12 +11,13 @@ class BotProps(
         var game: String = "",
         var trackDurationLimit: Int = 0,
         var announceTracks: Boolean = false,
-        var azureToken: String = "",
         var openAIToken: String = "",
+        var azureToken: String = "",
         var azureEndpoint: String = "",
         var speechToken: String = "",
         var elevenLabsToken: String = "",
         var ytAuthToken: String = "",
         var visitorData: String = "",
-        var poToken: String = ""
+        var poToken: String = "",
+        var guildId: String = ""
 )

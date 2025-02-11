@@ -63,6 +63,7 @@ Whenever your replies bug out, you just respond with "That was too boring for me
     private val timezoneId = ZoneId.of("Etc/GMT+7")
     private var lastMessage : String = ""
     private var counter: Int = 0
+    private var timeId: Int = 0
 
     init {
         println("INIT CHRISALAXELRTO")
@@ -131,9 +132,10 @@ Whenever your replies bug out, you just respond with "That was too boring for me
 
         val currentTime = OffsetDateTime.now(timezoneId).format(timeFormat)
         addMessageToContext("The current time is: ${currentTime}", Role.System)
+        timeId = chatMessages.lastIndex
 
         val chatCompletions = client.getChatCompletions("Chrisalaxelrto", chatCompletionsOptions)
-        removeMessageFromContext(chatMessages.lastIndex)
+        removeMessageFromContext(timeId)
 
         if(chatCompletions.choices.isEmpty()){
             addMessageToContext("${currentTime} That was too boring for me to come up with a response.", Role.Chrisalaxelrto)

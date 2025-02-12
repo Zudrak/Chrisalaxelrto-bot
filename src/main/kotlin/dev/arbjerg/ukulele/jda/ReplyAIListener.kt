@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.ScheduledFuture
 import kotlin.random.Random
 import dev.arbjerg.ukulele.features.ChrisalaxelrtoOpenAI.Mood
 import org.springframework.stereotype.Component
@@ -23,6 +24,7 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
     final val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
     var lastChannel : MessageChannel? = null
     var lastDelay: Long = 5L
+    private var scheduledFuture: ScheduledFuture<*>? = null
 
     val usernameList: List<Pair<Regex, String>> = listOf(
         Regex("<@889612265920266251>", RegexOption.IGNORE_CASE) to "@Chrisalaxelrto",
@@ -33,39 +35,51 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
         Regex("<@686807129470009370>", RegexOption.IGNORE_CASE) to "@Sora"
     )
 
+    val nicknameList: List<String> = listOf(
+        "Chrisalaxelrto",
+        "Crix",
+        "CXL"
+    )
+
     @OptIn(DelicateCoroutinesApi::class)
-    private final fun scheduleTask() {
-        if(lastChannel == null) {
-            return
+    private val taskRunnable = Runnable{
+        if(lastChannel == null) return@Runnable
+
+        var msg : String? = ""
+        val job = GlobalScope.launch {
+            msg = chatAi.reply()
         }
-        var delay = lastDelay
 
-        scheduler.schedule({
-            var msg : String? = ""
-            val job = GlobalScope.launch {
-                msg = chatAi.reply()
+        runBlocking {
+            while(!job.isCompleted) {
+                delay(2000)
             }
+            job.join()
+            if(!msg.isNullOrBlank()){
+                lastChannel!!.sendTyping().queue()
+                delay(5000)
+                lastChannel!!.sendMessage(msg!!).queue()
+            }
+            lastDelay = when (chatAi.getMood()){
+                Mood.Answering -> Random.nextLong(5, 10)
+                Mood.Chatty -> Random.nextLong(8, 12)
+                Mood.Waiting -> Random.nextLong(20, 35)
+                Mood.Bored -> Random.nextLong(40, 55)
+                Mood.Busy -> Random.nextLong(1200, 1800)
+            }
+        }
+        scheduleTask() // Reschedule the task with a new random delay
 
-            runBlocking {
-                while(!job.isCompleted) {
-                    delay(2000)
-                }
-                job.join()
-                if(!msg.isNullOrBlank()){
-                    lastChannel!!.sendTyping().queue()
-                    delay(5000)
-                    lastChannel!!.sendMessage(msg!!).queue()
-                }
-                lastDelay = when (chatAi.getMood()){
-                    Mood.Answering -> Random.nextLong(5, 10)
-                    Mood.Chatty -> Random.nextLong(10, 15)
-                    Mood.Waiting -> Random.nextLong(20, 35)
-                    Mood.Bored -> Random.nextLong(40, 55)
-                    Mood.Busy -> Random.nextLong(1200, 1800)
-                }
-            }
-            scheduleTask() // Reschedule the task with a new random delay
-        }, delay, TimeUnit.SECONDS)
+    }
+
+    private final fun scheduleTask() {
+        if(lastChannel == null) return
+        scheduledFuture = scheduler.schedule(taskRunnable, lastDelay, TimeUnit.SECONDS)
+    }
+
+    fun triggerTaskNow(){
+        scheduledFuture?.cancel(false)
+        taskRunnable.run()
     }
 
     private fun replaceAts(input: String): String{
@@ -101,11 +115,9 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
                 }
 
                 if (guild.textChannel == null || "<#${event.channel.id}>" == guild.textChannel) {
-                    chatAi.chatMessageReceived(
-                        event.message.timeCreated,
-                        replaceAts(event.message.contentRaw),
-                        event.member!!
-                    )
+                    var msg = replaceAts(event.message.contentRaw)
+                    chatAi.chatMessageReceived(event.message.timeCreated, msg, event.member!!)
+                    if(nicknameList.any {msg.contains(it, ignoreCase = true)}) triggerTaskNow()
                 }
             }
         }

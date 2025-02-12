@@ -12,21 +12,24 @@ import org.springframework.stereotype.Component
 @Component
 class AITalkCommand(var chatAi: ChrisalaxelrtoOpenAI, val botProps: BotProps) : Command("talk") {
     override suspend fun CommandContext.invoke() {
-        if(channel.guild.id == botProps.guildId){
-            if(checkChannel(CommandContext.ChannelType.Text, channel.id)) {
-                channel.sendTyping().queue()
+        //deprecated
+        if(false){
+            if(channel.guild.id == botProps.guildId){
+                if(checkChannel(CommandContext.ChannelType.Text, channel.id)) {
+                    channel.sendTyping().queue()
 
-                log.info(channel.toString())
+                    log.info(channel.toString())
 
-                if (argumentText.trim().isEmpty()) {
-                    return
-                }
+                    if (argumentText.trim().isEmpty()) {
+                        return
+                    }
 
-                GlobalScope.launch {
-                    try {
-                        reply(chatAi.reply() ?: "")
-                    } catch (e: Exception) {
-                        log.error("$e")
+                    GlobalScope.launch {
+                        try {
+                            reply(chatAi.reply() ?: "")
+                        } catch (e: Exception) {
+                            log.error("$e")
+                        }
                     }
                 }
             }

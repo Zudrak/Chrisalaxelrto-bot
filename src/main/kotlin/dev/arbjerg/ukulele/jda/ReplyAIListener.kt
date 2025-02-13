@@ -46,6 +46,7 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
         if(lastChannel == null) return@Runnable
 
         var msg : String? = ""
+        println("request start")
         val job = GlobalScope.launch {
             msg = chatAi.reply()
         }
@@ -74,6 +75,7 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
 
     private final fun scheduleTask() {
         if(lastChannel == null) return
+        scheduledFuture?.cancel(false)
         scheduledFuture = scheduler.schedule(taskRunnable, lastDelay, TimeUnit.SECONDS)
     }
 
@@ -121,7 +123,7 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
                 if (guild.textChannel == null || "<#${event.channel.id}>" == guild.textChannel) {
                     var msg = replaceAts(event.message.contentRaw)
                     chatAi.chatMessageReceived(event.message.timeCreated, msg, event.member!!)
-                    if(nicknameList.any {msg.contains(it, ignoreCase = true)}) triggerTaskNow()
+                    //if(nicknameList.any {msg.contains(it, ignoreCase = true)}) triggerTaskNow()
                 }
             }
         }

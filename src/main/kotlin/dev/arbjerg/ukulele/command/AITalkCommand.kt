@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component
 @Component
 class AITalkCommand(var chatAi: ChrisalaxelrtoOpenAI, val botProps: BotProps) : Command("talk") {
     override suspend fun CommandContext.invoke() {
-        //deprecated
-        if(false){
+        //un-deprecated
+        if(true){
             if(channel.guild.id == botProps.guildId){
                 if(checkChannel(CommandContext.ChannelType.Text, channel.id)) {
                     channel.sendTyping().queue()

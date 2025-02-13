@@ -175,7 +175,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
             val msg = message.contentRaw
             val msgStr = "${time} {${name}} {${msg}}"
             if(name == "Chrisalaxelrto" || name == "Goofy"){
-                addMessageToContext(msgStr, Role.Chrisalaxelrto)
+                addMessageToContext("${time} /send ${msg}", Role.Chrisalaxelrto)
             }else{
                 addMessageToContext(msgStr, Role.User)
             }

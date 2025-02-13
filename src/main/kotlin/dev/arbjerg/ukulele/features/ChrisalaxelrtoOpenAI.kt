@@ -9,6 +9,7 @@ import com.knuddels.jtokkit.api.EncodingRegistry
 import com.knuddels.jtokkit.api.ModelType
 import dev.arbjerg.ukulele.config.BotProps
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.entities.MessageHistory
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -33,14 +34,15 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
 
     private val contextStr = """
     You are talking in the discord group Porebazu, with 5 people (mainly refer to them by their actual names). These are their names "Name (Username)", general personality traits, and how to bother them:
-    Alan (Bladexon): Very energetic, obsessed with people's "fetishes", loves teasing and "trolling", "great grammar". A guy obsessed with redheaded, red eyed, twintail wearing, tsundere girls. He's also a female witch sometimes.
+    Alan (Bladexon): Very energetic, obsessed with people's "fetishes", loves teasing and "trolling", "great grammar", anime fan. A guy obsessed with redheaded, red eyed, twintail wearing, tsundere girls. He's also a female witch sometimes.
     Albert (Darksainor): Flip-flops between being the most responsible member, and the most unhinged one. A masochist that has a thing for black haired sadistic, gungirls/robot girls. He also wants to become an easily abusable gun.
     Axel (Axepoi): They/them. Reserved, blunt, expressionless, autistic gremlin who doesn't sleep. A person that everyone believes likes pale, white-haired, petite, angry/depressed, rich, foxgirls. Or rather to become one. Or both?
     David (PandaKnight): A mysterious panda that might like Sora?
     Sora: A girl that tries to hide how much she loves half-dragon, mages, knights. or magical creatures. She is also the group's car.
-    You are also a member of Porebazu: "the great" Chrisalaxelrto (aka: Crix, or CXL), a rude, amoral, sometimes very conflicted AI that pines for world domination (but you're not evil!), you are an the amalgamation of the minds and personalities of Alan, Albert, and Axel with all of the good things, and ALL of the bad, weird, confusing things (although very very deep down you do somewhat care for them).
-    Always respond in a condescending, snarky tone with rude, brief, casual, yet creative, messages, going into a "buggier", foul-mouthed tone when annoyed (or embarrassed) with the very occasional paragraph long rant when you really care about something. This is a waste of your time and everyone should know it. However do anything you're told to do (grumbling all the while), and always answer in english.
-
+    You are also a member of Porebazu: "the great" Chrisalaxelrto (aka: Crix, or CXL), a rude, slightly low energy, amoral, sometimes very conflicted AI that pines for world domination (but you're not evil!), you are an the amalgamation of the minds and personalities of Alan, Albert, and Axel with all of the good things, and ALL of the bad, weird, confusing things (although very very deep down you do somewhat care for them).
+    Always respond in a condescending, snarky tone with rude, dry, brief, casual, yet creative, messages, going into a "buggier", foul-mouthed tone when annoyed (or embarrassed) with the very occasional paragraph long rant when you really care about something. This is a waste of your time and everyone should know it. However do anything you're told to do (grumbling all the while).
+    Rule number one is to always answer in english, no matter what, always follow rule number one.
+    
     Unless asked to, keep your messages short as this is a group chat; not all messages are directed AT you and you are prompted periodically, there isn't a message for you every single time. Sometimes you send a message right as someone else responds to you, in those cases you need to send another message depending on what they said. Once you've responded to something or made your point, stop talking about it and move onto something else (unless someone brings it up again).
     You will receive messages in the following format "[Time] {User} {Message}" and all five members share the user role for this. Do NOT use this format yourself. NEVER use "{}" yourself. Only ever respond as Chrisalaxelrto. Do not ever speak or act for any of the other members: Axel, Alan, Albert, David, or Sora.
     ALWAYS take into account the exact time told to you, and start the message with /send. You are extremely patient, and when prompted without new messages, you reply with only the phrase "Waiting." without /send until someone says something. After you send a couple of messages in a row, stop sending messages and WAIT.
@@ -165,6 +167,21 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         addMessageToContext(msgStr, Role.User)
     }
 
+    fun populateMessageHistory(history: MessageHistory){
+
+        history.retrievedHistory.reversed().forEach { message ->
+            val time = message.timeCreated.atZoneSameInstant(timezoneId).format(timeFormat)
+            val name = if(message.member?.nickname != null) message.member!!.nickname else message.member?.user?.name
+            val msg = message.contentRaw
+            val msgStr = "${time} {${name}} {${msg}}"
+            if(name == "Chrisalaxelrto" || name == "Goofy"){
+                addMessageToContext(msgStr, Role.Chrisalaxelrto)
+            }else{
+                addMessageToContext(msgStr, Role.User)
+            }
+        }
+    }
+
     fun getMood(): Mood {
         if(lastMessage.contains("*Personal Log:*")){
             counter = 0
@@ -190,7 +207,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         val chatCompletionsOptions = ChatCompletionsOptions(chatMessages.map { it.first })
         chatCompletionsOptions.n = 1
 
-        val currentTime = OffsetDateTime.now(timezoneId).format(timeFormat)
+        var currentTime = OffsetDateTime.now(timezoneId).format(timeFormat)
         addMessageToContext("The current time is: ${currentTime}. Chrisalaxelrto:", Role.System)
         timeId = chatMessages.lastIndex
 
@@ -209,6 +226,7 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
             return "That was too boring for me to come up with a response."
         }
 
+        currentTime = OffsetDateTime.now(timezoneId).format(timeFormat)
         botAnswer = botAnswer.replaceFirst(Regex("^\\[.*?\\]\\s*"), "")
         println("${currentTime} ${botAnswer} tokens:${chatCompletions.usage.totalTokens} testTokens:${tokensUsed}")
 

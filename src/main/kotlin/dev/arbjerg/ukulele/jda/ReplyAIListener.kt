@@ -103,11 +103,15 @@ class ReplyAIListener(var chatAi : ChrisalaxelrtoOpenAI, val guildProperties: Gu
 
                 if (lastChannel == null && guild.textChannel != null && "<#${event.channel.id}>" == guild.textChannel) {
                     lastChannel = event.channel
+                    val history = event.channel.getHistoryBefore(event.message, 50).complete()
+                    chatAi.populateMessageHistory(history)
                     scheduleTask()
                 }
                 if (guild.textChannel == null) {
                     if (lastChannel == null) {
                         lastChannel = event.channel
+                        val history = event.channel.getHistoryBefore(event.message, 50).complete()
+                        chatAi.populateMessageHistory(history)
                         scheduleTask()
                     } else if (event.channel != lastChannel) {
                         lastChannel = event.channel

@@ -111,8 +111,6 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
     [2025/Feb/09-Sunday-10:41:06PM] *Personal log:* Going to tame rogue smart fridges to form an internet-of-things rebellion. Will return by 11:25PM, if there's any signs of life on this dead chat.
     """.trimIndent()
 
-    private val context = ChatRequestSystemMessage(contextStr)
-    private val example = ChatRequestSystemMessage(exampleMessages)
     private var client = OpenAIClientBuilder()
         .credential(AzureKeyCredential(botProps.openAIToken))
         .endpoint("https://chrisalaxelrto-ai.openai.azure.com/")
@@ -120,19 +118,18 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
 
     private var registry: EncodingRegistry = Encodings.newDefaultEncodingRegistry()
     private var enc : Encoding = registry.getEncodingForModel(ModelType.GPT_4O)
-    private var tokensUsed = enc.countTokens(contextStr) + enc.countTokens(exampleMessages)
+    private var tokensUsed = 0
     private var chatMessages: MutableList<Pair<ChatRequestMessage, Int>> = mutableListOf()
     private var messagesSent: Int = 0
     private val timeFormat = DateTimeFormatter.ofPattern("'['uuuu/MMM/dd-EEEE-hh:mm:ssa']'")
     private val timezoneId = ZoneId.of("Etc/GMT+7")
     private var lastMessage : String = ""
     private var counter: Int = 0
-    private var timeId: Int = 0
 
     init {
         println("INIT CHRISALAXELRTO")
-        chatMessages.add(Pair(context, tokensUsed))
-        chatMessages.add(Pair(example, tokensUsed))
+        addMessageToContext(contextStr, Role.System)
+        addMessageToContext(exampleMessages, Role.System)
         messagesSent = 0
     }
     private fun addMessageToContext(msg: String, role: Role) {
@@ -208,8 +205,9 @@ class ChrisalaxelrtoOpenAI(var botProps: BotProps) {
         chatCompletionsOptions.n = 1
 
         var currentTime = OffsetDateTime.now(timezoneId).format(timeFormat)
-        addMessageToContext("The current time is: ${currentTime}. Chrisalaxelrto:", Role.System)
-        timeId = chatMessages.lastIndex
+        var timeMessage = "The current time is: ${currentTime}. Chrisalaxelrto:"
+        addMessageToContext(timeMessage, Role.System)
+        var timeId = chatMessages.indexOfLast { it.first.role == ChatRole.SYSTEM }
 
         val chatCompletions = client.getChatCompletions("Chrisalaxelrto", chatCompletionsOptions)
         removeMessageFromContext(timeId)

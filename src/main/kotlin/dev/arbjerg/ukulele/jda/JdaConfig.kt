@@ -39,7 +39,7 @@ class JdaConfig {
                 .setEnableShutdownHook(false)
                 .setAutoReconnect(true)
                 .setShardsTotal(botProps.shards)
-                .addEventListeners(eventHandler, replyAIListener, imageListener, lonelyListener)
+                .addEventListeners(eventHandler, imageListener, lonelyListener)
                 .setActivity(activity)
 
         val shardManager: ShardManager

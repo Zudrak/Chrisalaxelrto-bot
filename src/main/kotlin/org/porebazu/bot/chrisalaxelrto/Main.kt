@@ -32,7 +32,7 @@ class ChrisalaxelrtoApplication {
 			configurableEnvironment.propertySources.addLast(tableStorageProvider)
 			configurableEnvironment.propertySources.addLast(keyVaultProvider)
 
-			println("Music Channel ID was: ${configurableEnvironment.getProperty("MusicChannelId")}")
+			println("Music Channel ID was: ${configurableEnvironment.getProperty("MusicChannelID")}")
 			val jda = JDABuilder.createDefault(configurableEnvironment.getProperty("DiscordToken"))
 				.enableIntents(GatewayIntent.GUILD_MESSAGES)
 				.build()

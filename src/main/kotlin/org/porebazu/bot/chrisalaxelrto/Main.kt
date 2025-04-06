@@ -2,14 +2,17 @@ package org.porebazu.bot.chrisalaxelrto
 
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.requests.GatewayIntent
-import org.porebazu.bot.chrisalaxelrto.provider.IdentityProvider
-import org.porebazu.bot.chrisalaxelrto.provider.KeyVaultProvider
-import org.porebazu.bot.chrisalaxelrto.provider.TableStorageProvider
+import org.porebazu.bot.chrisalaxelrto.config.PropertySourceConfiguration
+import org.porebazu.bot.chrisalaxelrto.config.BotConfig
+import org.porebazu.bot.chrisalaxelrto.utils.AzureEnvironmentChecker
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.annotation.Bean
-import org.springframework.core.env.ConfigurableEnvironment
+import org.springframework.context.annotation.DependsOn
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
+import org.springframework.core.env.Environment
 
 /**
  * This is the main class of the Chrisalaxelrto application.
@@ -23,27 +26,31 @@ class ChrisalaxelrtoApplication {
 
 	/**
 	 * This is the entry point of the application. Think of it as the main method.
+	 * We explicitly add @DependsOn to ensure the BotConfig is injected after property sources are initialized
 	 */
 	@Bean
-	fun applicationRunner(configurableEnvironment: ConfigurableEnvironment, identityProvider : IdentityProvider) : ApplicationRunner {
+	@Order(Ordered.LOWEST_PRECEDENCE)
+	@DependsOn("propertySourcesInitializer")
+	fun applicationRunner(botConfig: BotConfig, azureEnvironmentChecker: AzureEnvironmentChecker, environment: Environment) : ApplicationRunner {
 		return ApplicationRunner {
-			val tableStorageProvider = TableStorageProvider(configurableEnvironment, identityProvider)
-			val keyVaultProvider = KeyVaultProvider(configurableEnvironment, identityProvider)
-			configurableEnvironment.propertySources.addLast(tableStorageProvider)
-			configurableEnvironment.propertySources.addLast(keyVaultProvider)
 
-			println("Music Channel ID was: ${configurableEnvironment.getProperty("MusicChannelID")}")
-			val jda = JDABuilder.createDefault(configurableEnvironment.getProperty("DiscordToken"))
+			val discordToken = if (azureEnvironmentChecker.isRunningInAzure()) {
+				botConfig.DiscordToken
+			} else {
+				environment.getProperty("bot.DiscordTokenGoofy")
+			}
+
+			val jda = JDABuilder.createDefault(discordToken)
 				.enableIntents(GatewayIntent.GUILD_MESSAGES)
 				.build()
 		}
 	}
 
-
 	companion object {
 		@JvmStatic
 		fun main(args: Array<String>) {
 			SpringApplicationBuilder(ChrisalaxelrtoApplication::class.java)
+				.initializers(PropertySourceConfiguration())
 				.run(*args)
 		}
 	}

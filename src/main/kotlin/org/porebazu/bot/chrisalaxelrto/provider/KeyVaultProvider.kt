@@ -17,13 +17,17 @@ class KeyVaultProvider(environment: Environment, identityProvider: IdentityProvi
         .httpLogOptions(HttpLogOptions().setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS))
         .buildClient()
     override fun getProperty(name: String): Any? {
-        if(name.startsWith("spring.")){
+
+        // If the property name starts with "bot.", strip it for KeyVault lookup
+        val secretName = if (name.startsWith("bot.")) {
+            name.substring(4) // Remove "bot." prefix
+        } else {
             return null
         }
 
         return try {
-            secretClient.getSecret(name).value
-        }catch (e: ResourceNotFoundException){
+            secretClient.getSecret(secretName).value
+        } catch (e: ResourceNotFoundException){
             null
         }
     }

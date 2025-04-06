@@ -26,10 +26,14 @@ class TableStorageProvider(environment: Environment, identityProvider: IdentityP
             .buildClient()
     }
     override fun getProperty(name: String): Any? {
-        if(name.startsWith("spring.")){
+        // If the property name starts with "bot.", strip it for KeyVault lookup
+        val propertyName = if (name.startsWith("bot.")) {
+            name.substring(4) // Remove "bot." prefix
+        } else {
             return null
         }
+        
         val entity = tableClient.getEntity("724848650810818601", "724848650810818601")
-        return entity?.getProperty(name)
+        return entity?.getProperty(propertyName)
     }
 }

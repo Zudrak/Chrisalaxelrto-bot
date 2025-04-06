@@ -46,9 +46,9 @@ class PropertySourceConfiguration : ApplicationContextInitializer<ConfigurableAp
             val keyVaultProvider = KeyVaultProvider(environment, identityProvider)
             
             // Add the property sources to the environment with higher precedence
-            environment.propertySources.addFirst(keyVaultProvider)
-            environment.propertySources.addFirst(tableStorageProvider)
-            
+            environment.propertySources.addLast(tableStorageProvider)
+            environment.propertySources.addLast(keyVaultProvider)
+
             // Initialization complete
             System.clearProperty("custom.property.sources.initializing")
         }

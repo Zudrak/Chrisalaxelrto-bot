@@ -1,5 +1,3 @@
-@description('Azure Key Vault deployment for Chrisalaxelrto Discord Bot')
-
 // Parameters
 @description('The name of the Key Vault')
 param keyVaultName string

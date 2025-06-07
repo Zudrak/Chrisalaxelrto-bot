@@ -29,12 +29,11 @@ param minReplicas int = 1
 param maxReplicas int = 3
 
 // Variables
-var resourceNamePrefix = '${applicationName}-${environmentName}'
-var containerAppName = '${resourceNamePrefix}-app'
-var containerEnvironmentName = '${resourceNamePrefix}-env'
-var keyVaultName = take('${resourceNamePrefix}-kv-${uniqueString(resourceGroup().id)}', 24)
-var storageAccountName = take(replace('${resourceNamePrefix}storage${uniqueString(resourceGroup().id)}', '-', ''), 24)
-var logAnalyticsWorkspaceName = '${resourceNamePrefix}-logs'
+var containerAppName = '${applicationName}-app-${environmentName}'
+var containerEnvironmentName = '${applicationName}-env-${environmentName}'
+var keyVaultName = take('${applicationName}-kv-${environmentName}-${uniqueString(resourceGroup().id)}', 24)
+var storageAccountName = take(replace('${applicationName}storage${environmentName}${uniqueString(resourceGroup().id)}', '-', ''), 24)
+var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 
 // Common tags
 var commonTags = {

@@ -1,5 +1,3 @@
-@description('Azure Storage Account deployment for Chrisalaxelrto Discord Bot')
-
 // Parameters
 @description('The name of the Storage Account')
 param storageAccountName string

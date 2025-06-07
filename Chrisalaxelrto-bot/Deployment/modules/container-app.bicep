@@ -1,5 +1,3 @@
-@description('Azure Container App deployment for Chrisalaxelrto Discord Bot')
-
 // Parameters
 @description('The name of the Container App')
 param containerAppName string

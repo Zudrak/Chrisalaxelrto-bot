@@ -14,14 +14,6 @@
     "containerImage": {
       "value": "mcr.microsoft.com/dotnet/runtime:8.0"
     },
-    "discordBotToken": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/{subscription-id}/resourceGroups/{keyvault-rg}/providers/Microsoft.KeyVault/vaults/{existing-keyvault-name}"
-        },
-        "secretName": "discord-bot-token"
-      }
-    },
     "minReplicas": {
       "value": 1
     },

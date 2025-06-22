@@ -1,12 +1,15 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Azure.Identity;
-using NetCord;
+﻿using NetCord;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Rest;
 using NetCord.Gateway;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Azure.Identity;
+using NetCord.Hosting.Services.Commands;
+
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -31,14 +34,19 @@ builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCre
 
 var token = isLocal ? builder.Configuration["discord-bot-token-dev"] : builder.Configuration["discord-bot-token"];
 builder.Services
-.AddDiscordGateway(config =>
-{
-    config.Token = token;
-    config.Intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.GuildMessageReactions;
-}).AddApplicationCommands();
+    .AddDiscordGateway(config =>
+    {
+        config.Token = token;
+    })
+    .AddCommands()
+    .AddApplicationCommands();
+
+builder.Services.AddSingleton<VoiceChannelService>();
 
 var host = builder.Build();
 
-host.AddApplicationCommandModule<VoiceService>();
+host.AddModules(typeof(Program).Assembly);
+host.AddApplicationCommandModule<MusicCommand>();
 host.UseGatewayEventHandlers();
+
 await host.RunAsync();

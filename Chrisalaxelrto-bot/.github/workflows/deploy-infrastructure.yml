@@ -1,0 +1,92 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (dev, prod)'
+        required: true
+        type: string
+      location:
+        description: 'Azure region for deployment'
+        required: false
+        type: string
+        default: 'East US 2'
+      container-image:
+        description: 'Container image to deploy'
+        required: false
+        type: string
+        default: 'mcr.microsoft.com/dotnet/runtime:8.0'
+    secrets:
+      AZURE_CLIENT_ID:
+        description: 'Azure Service Principal Client ID'
+        required: true
+      AZURE_TENANT_ID:
+        description: 'Azure Tenant ID'
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        description: 'Azure Subscription ID'
+        required: true
+      DISCORD_BOT_TOKEN:
+        description: 'Discord Bot Token'
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Validate environment parameter file exists
+      run: |
+        PARAM_FILE="Deployment/parameters/main.parameters.${{ inputs.environment }}.json"
+        if [ ! -f "$PARAM_FILE" ]; then
+          echo "Error: Parameter file $PARAM_FILE not found"
+          exit 1
+        fi
+        echo "Using parameter file: $PARAM_FILE"
+
+    - name: Set resource group name
+      id: rg
+      run: |
+        RG_NAME="rg-chrisalaxelrto-bot-${{ inputs.environment }}"
+        echo "name=$RG_NAME" >> $GITHUB_OUTPUT
+        echo "Resource Group: $RG_NAME"
+
+    - name: Create Resource Group
+      run: |
+        az group create \
+          --name ${{ steps.rg.outputs.name }} \
+          --location "${{ inputs.location }}" \
+          --tags Environment=${{ inputs.environment }} Application=chrisalaxelrto-bot ManagedBy=GitHub-Actions
+
+    - name: Deploy Bicep template
+      id: deploy
+      run: |
+        DEPLOYMENT_NAME="deploy-$(date +%Y%m%d-%H%M%S)"
+        
+        az deployment group create \
+          --resource-group ${{ steps.rg.outputs.name }} \
+          --template-file Deployment/main.bicep \
+          --parameters @Deployment/parameters/main.parameters.${{ inputs.environment }}.json \
+          --parameters containerImage="${{ inputs.container-image }}" \
+          --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
+          --name $DEPLOYMENT_NAME \
+          --verbose
+        
+        echo "deployment-name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT

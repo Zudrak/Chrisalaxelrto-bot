@@ -1,15 +1,11 @@
-ukulele.jar
-audio.mp3
-output.wav
-*.mv.db
-*.trace.db
 HELP.md
 .gradle
+.idea
 build/
+tmp/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-ukulele.yml
 
 ### STS ###
 .apt_generated
@@ -41,3 +37,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Kotlin ###
+.kotlin

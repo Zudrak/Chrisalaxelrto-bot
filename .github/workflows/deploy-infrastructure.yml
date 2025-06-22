@@ -24,6 +24,10 @@ on:
       DISCORD_BOT_TOKEN:
         description: 'Discord Bot Token'
         required: true
+      DISCORD_BOT_TOKEN_DEV:
+        description: 'Discord Bot Token Dev'
+        required: true
+          
 
 permissions:
   id-token: write
@@ -82,5 +86,6 @@ jobs:
           --template-file Deployment/main.bicep \
           --parameters @Deployment/parameters/parameters.${{ inputs.environment }}.json \
           --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
+          --parameters discordBotTokenDev="${{ secrets.DISCORD_BOT_TOKEN_DEV }}"
           --name $DEPLOYMENT_NAME \
           --verbose

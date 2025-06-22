@@ -16,6 +16,10 @@ param containerImage string = 'mcr.microsoft.com/dotnet/runtime:8.0'
 @secure()
 param discordBotToken string
 
+@description('Discord bot token dev (will be stored in Key Vault)')
+@secure()
+param discordBotTokenDev string
+
 @description('The minimum number of replicas for the container app')
 @minValue(0)
 @maxValue(10)
@@ -79,7 +83,8 @@ module keyVault 'modules/key-vault.bicep' = {
     keyVaultName: keyVaultName
     location: location
     tags: commonTags
-    discordBotToken: discordBotToken
+    discordBotToken: discordBotToken,
+    discordBotTokenDev: discordBotTokenDev
   }
 }
 

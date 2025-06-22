@@ -12,6 +12,10 @@ param tags object = {}
 @secure()
 param discordBotToken string
 
+@description('Discord bot token for dev to store in Key Vault')
+@secure()
+param discordBotTokenDev string
+
 @description('The tenant ID for Key Vault access policies')
 param tenantId string = subscription().tenantId
 
@@ -44,6 +48,18 @@ resource discordBotTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
   name: 'discord-bot-token'
   properties: {
     value: discordBotToken
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource discordBotTokenDevSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'discord-bot-token-dev'
+  properties: {
+    value: discordBotTokenDev
     contentType: 'text/plain'
     attributes: {
       enabled: true

@@ -1,5 +1,3 @@
 {
-  "Discord": {
-    "Token": "Token is read from Key Vault"
-  }
+  "AzureKeyVaultUri": "https://chrisalaxelrto-kv-prod.vault.azure.net/"
 }

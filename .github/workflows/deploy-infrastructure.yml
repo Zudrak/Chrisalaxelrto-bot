@@ -51,21 +51,24 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Validate environment parameter file exists
+    - name: Extract location from parameter file
+      id: param_location
       run: |
         PARAM_FILE="Deployment/parameters/parameters.${{ inputs.environment }}.json"
-        if [ ! -f "$PARAM_FILE" ]; then
-          echo "Error: Parameter file $PARAM_FILE not found"
+        LOCATION=$(jq -r '.parameters.location.value // .parameters.location.defaultValue // empty' "$PARAM_FILE")
+        if [ -z "$LOCATION" ]; then
+          echo "Error: Could not extract location from $PARAM_FILE"
           exit 1
         fi
-        echo "Using parameter file: $PARAM_FILE"
+        echo "location=$LOCATION" >> $GITHUB_OUTPUT
+        echo "Location: $LOCATION"
 
-    - name: Set resource group name
-      id: rg
+    - name: Create Resource Group
       run: |
-        RG_NAME="rg-chrisalaxelrto-bot-${{ inputs.environment }}"
-        echo "name=$RG_NAME" >> $GITHUB_OUTPUT
-        echo "Resource Group: $RG_NAME"
+        az group create \
+          --name ${{ steps.rg.outputs.name }} \
+          --location "${{ steps.param_location.outputs.location }}" \
+          --tags Environment=${{ inputs.environment }} Application=chrisalaxelrto-bot ManagedBy=GitHub-Actions
 
     - name: Deploy Bicep template
       id: deploy

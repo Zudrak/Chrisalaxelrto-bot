@@ -22,7 +22,6 @@ jobs:
     with:
       environment: prod
       github-environment: Chrisalaxelrto
-      container-image: ${{ inputs.container-image || 'mcr.microsoft.com/dotnet/runtime:8.0' }}
     secrets:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}

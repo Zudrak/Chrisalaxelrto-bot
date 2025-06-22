@@ -9,7 +9,7 @@
       "value": "South Central US"
     },
     "applicationName": {
-      "value": "chrisalaxelrto-bot"
+      "value": "chrisalaxelrto"
     },
     "containerImage": {
       "value": "mcr.microsoft.com/dotnet/runtime:8.0"

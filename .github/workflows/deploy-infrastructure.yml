@@ -11,11 +11,6 @@ on:
         description: 'Target environment (dev, prod)'
         required: true
         type: string
-      container-image:
-        description: 'Container image to deploy'
-        required: false
-        type: string
-        default: 'mcr.microsoft.com/dotnet/runtime:8.0'
     secrets:
       AZURE_CLIENT_ID:
         description: 'Azure Service Principal Client ID'
@@ -86,7 +81,6 @@ jobs:
           --resource-group ${{ steps.params.outputs.app_name }}-rg-${{ inputs.environment }} \
           --template-file Deployment/main.bicep \
           --parameters @Deployment/parameters/parameters.${{ inputs.environment }}.json \
-          --parameters containerImage="${{ inputs.container-image }}" \
           --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
           --name $DEPLOYMENT_NAME \
           --verbose

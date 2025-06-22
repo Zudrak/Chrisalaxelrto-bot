@@ -2,6 +2,6 @@
     "IsEncrypted": false,
     "Values": {
         "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-        "AzureKeyVaultUri": "https://chrisalaxelrto-dev-kv.vault.azure.net/"
+        "AzureKeyVaultUri": "https://chrisalaxelrto-kv-prod.vault.azure.net/"
     }
 }

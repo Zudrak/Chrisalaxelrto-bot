@@ -1,5 +1,5 @@
 {
   "Discord": {
-    "Token": "Token from Discord Developer Portal"
+    "Token": "Token is read from Key Vault"
   }
 }

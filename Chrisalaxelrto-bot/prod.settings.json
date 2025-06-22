@@ -2,7 +2,7 @@
     "IsEncrypted": false,
     "Values": {
         "ASPNETCORE_ENVIRONMENT": "prod",
-        "AzureKeyVaultUri": "https://chrisalaxelrto-kv.vault.azure.net/",
-        "AzureWebJobsStorage__accountName": "chrisalaxelrto"
+        "AzureKeyVaultUri": "https://chrisalaxelrto-kv-prod.vault.azure.net/",
+        "AzureWebJobsStorage__accountName": "chrisalaxelrtosaprod"
     }
 }

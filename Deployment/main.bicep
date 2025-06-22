@@ -1,7 +1,5 @@
 @description('Main deployment template for Chrisalaxelrto Discord Bot')
 
-// Parameters
-@description('The environment name (dev, test, prod)')
 @allowed(['dev', 'test', 'prod'])
 param environmentName string = 'dev'
 

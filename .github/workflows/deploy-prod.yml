@@ -20,7 +20,7 @@ jobs:
     name: Deploy to Production Environment
     uses: ./.github/workflows/deploy-infrastructure.yml
     with:
-      environment: prod
+      environment: Chrisalaxelrto
       location: 'East US 2'
       container-image: ${{ inputs.container-image || 'mcr.microsoft.com/dotnet/runtime:8.0' }}
     secrets:

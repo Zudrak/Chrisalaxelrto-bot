@@ -83,7 +83,7 @@ module keyVault 'modules/key-vault.bicep' = {
     keyVaultName: keyVaultName
     location: location
     tags: commonTags
-    discordBotToken: discordBotToken,
+    discordBotToken: discordBotToken
     discordBotTokenDev: discordBotTokenDev
   }
 }

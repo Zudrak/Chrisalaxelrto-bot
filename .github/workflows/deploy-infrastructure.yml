@@ -3,6 +3,10 @@ name: Deploy Infrastructure
 on:
   workflow_call:
     inputs:
+      github-environment:
+        description: 'Target Github Environment'
+        required: true
+        type: string
       environment:
         description: 'Target environment (dev, prod)'
         required: true
@@ -39,7 +43,7 @@ jobs:
   deploy:
     name: Deploy infrastructure to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.github_environment }}
     
     steps:
     - name: Checkout code

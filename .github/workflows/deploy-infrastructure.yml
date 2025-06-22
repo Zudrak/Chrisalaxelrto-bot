@@ -73,7 +73,7 @@ jobs:
     - name: Create Resource Group
       run: |
         az group create \
-          --name ${{ steps.params.outputs.app_name }} \
+          --name ${{ steps.params.outputs.app_name }}-${{ inputs.environment }} \
           --location "${{ steps.params.outputs.location }}" \
           --tags Environment=${{ inputs.environment }} Application=chrisalaxelrto-bot ManagedBy=GitHub-Actions
 
@@ -83,12 +83,10 @@ jobs:
         DEPLOYMENT_NAME="deploy-$(date +%Y%m%d-%H%M%S)"
         
         az deployment group create \
-          --resource-group ${{ steps.params.outputs.app_name }} \
+          --resource-group ${{ steps.params.outputs.app_name }}-${{ inputs.environment }} \
           --template-file Deployment/main.bicep \
           --parameters @Deployment/parameters/parameters.${{ inputs.environment }}.json \
           --parameters containerImage="${{ inputs.container-image }}" \
           --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
           --name $DEPLOYMENT_NAME \
           --verbose
-        
-        echo "deployment-name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT

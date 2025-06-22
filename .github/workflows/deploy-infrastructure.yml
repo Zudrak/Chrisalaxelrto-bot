@@ -83,7 +83,7 @@ jobs:
         az deployment group create \
           --resource-group ${{ steps.rg.outputs.name }} \
           --template-file Deployment/main.bicep \
-          --parameters @Deployment/parameters/main.parameters.${{ inputs.environment }}.json \
+          --parameters @Deployment/parameters/parameters.${{ inputs.environment }}.json \
           --parameters containerImage="${{ inputs.container-image }}" \
           --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
           --name $DEPLOYMENT_NAME \

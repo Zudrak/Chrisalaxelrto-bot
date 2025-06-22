@@ -1,0 +1,8 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "ASPNETCORE_ENVIRONMENT": "prod",
+        "AzureKeyVaultUri": "https://chrisalaxelrto-kv.vault.azure.net/",
+        "AzureWebJobsStorage__accountName": "chrisalaxelrto"
+    }
+}

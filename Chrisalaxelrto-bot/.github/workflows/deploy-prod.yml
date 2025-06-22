@@ -1,0 +1,30 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Deployment/**'
+      - 'Chrisalaxelrto-bot/**'
+      - '.github/workflows/deploy-prod.yml'
+  workflow_dispatch:
+    inputs:
+      container-image:
+        description: 'Container image to deploy (optional)'
+        required: false
+        type: string
+
+jobs:
+  deploy-prod:
+    name: Deploy to Production Environment
+    uses: ./.github/workflows/deploy-infrastructure.yml
+    with:
+      environment: prod
+      location: 'East US 2'
+      container-image: ${{ inputs.container-image || 'mcr.microsoft.com/dotnet/runtime:8.0' }}
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN_PROD }}

@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy infrastructure to production
 
 on:
   push:
@@ -6,19 +6,13 @@ on:
       - main
     paths:
       - 'Deployment/**'
-      - 'Chrisalaxelrto-bot/**'
       - '.github/workflows/deploy-prod.yml'
   workflow_dispatch:
-    inputs:
-      container-image:
-        description: 'Container image to deploy (optional)'
-        required: false
-        type: string
 
 jobs:
   deploy-prod:
     name: Deploy infrastructure to Production Environment
-    uses: ./.github/workflows/deploy-infrastructure.yml
+    uses: ./.github/workflows/deploy-infrastructure-template.yml
     with:
       environment: prod
       github-environment: Chrisalaxelrto

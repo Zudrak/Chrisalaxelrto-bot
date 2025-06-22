@@ -30,7 +30,7 @@ param maxReplicas int = 3
 var containerAppName = '${applicationName}-app-${environmentName}'
 var containerEnvironmentName = '${applicationName}-env-${environmentName}'
 var keyVaultName = '${applicationName}-kv-${environmentName}'
-var storageAccountName = '${applicationName}storage${environmentName}'
+var storageAccountName = '${applicationName}sa${environmentName}'
 var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 
 // Common tags

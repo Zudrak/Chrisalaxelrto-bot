@@ -44,7 +44,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       secrets: [
         {
           name: 'discord-bot-token'
-          keyVaultUrl: 'https://${keyVaultName}.vault.azure.net/secrets/discord-bot-token'
+          keyVaultUrl: 'https://${keyVaultName}.${environment().suffixes.keyvaultDns}/secrets/discord-bot-token'
           identity: 'system'
         }
       ]

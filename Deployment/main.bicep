@@ -109,10 +109,6 @@ module containerApp 'modules/container-app.bicep' = {
     maxReplicas: maxReplicas
     environmentName: environmentName
   }
-  dependsOn: [
-    keyVault
-    storageAccount
-  ]
 }
 
 // Outputs

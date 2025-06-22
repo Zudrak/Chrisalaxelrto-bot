@@ -43,7 +43,7 @@ jobs:
   deploy:
     name: Deploy infrastructure to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.github_environment }}
+    environment: ${{ inputs.github-environment }}
     
     steps:
     - name: Checkout code

@@ -11,11 +11,6 @@ on:
         description: 'Target environment (dev, prod)'
         required: true
         type: string
-      location:
-        description: 'Azure region for deployment'
-        required: false
-        type: string
-        default: 'East US 2'
       container-image:
         description: 'Container image to deploy'
         required: false
@@ -71,13 +66,6 @@ jobs:
         RG_NAME="rg-chrisalaxelrto-bot-${{ inputs.environment }}"
         echo "name=$RG_NAME" >> $GITHUB_OUTPUT
         echo "Resource Group: $RG_NAME"
-
-    - name: Create Resource Group
-      run: |
-        az group create \
-          --name ${{ steps.rg.outputs.name }} \
-          --location "${{ inputs.location }}" \
-          --tags Environment=${{ inputs.environment }} Application=chrisalaxelrto-bot ManagedBy=GitHub-Actions
 
     - name: Deploy Bicep template
       id: deploy

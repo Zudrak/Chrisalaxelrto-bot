@@ -86,6 +86,6 @@ jobs:
           --template-file Deployment/main.bicep \
           --parameters @Deployment/parameters/parameters.${{ inputs.environment }}.json \
           --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
-          --parameters discordBotTokenDev="${{ secrets.DISCORD_BOT_TOKEN_DEV }}"
+          --parameters discordBotTokenDev="${{ secrets.DISCORD_BOT_TOKEN_DEV }}" \
           --name $DEPLOYMENT_NAME \
           --verbose

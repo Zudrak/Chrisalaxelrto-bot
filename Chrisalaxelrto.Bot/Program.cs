@@ -1,14 +1,11 @@
-﻿using NetCord;
-using NetCord.Hosting.Gateway;
-using NetCord.Hosting.Services;
+﻿using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services.ApplicationCommands;
-using NetCord.Rest;
 using NetCord.Gateway;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Azure.Identity;
 using NetCord.Hosting.Services.Commands;
+using Chrisalaxelrto.Bot.Extensions;
 
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -37,16 +34,17 @@ builder.Services
     .AddDiscordGateway(config =>
     {
         config.Token = token;
+        config.Intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent | GatewayIntents.GuildVoiceStates;
     })
     .AddCommands()
     .AddApplicationCommands();
 
-builder.Services.AddSingleton<VoiceChannelService>();
+builder.Services.AddPorebazuEventHandlers();
+builder.Services.AddPorebazuServices();
 
 var host = builder.Build();
 
-host.AddModules(typeof(Program).Assembly);
-host.AddApplicationCommandModule<MusicCommand>();
+host.AddPorebazuCommands();
 host.UseGatewayEventHandlers();
 
 await host.RunAsync();

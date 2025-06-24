@@ -91,7 +91,6 @@ module containerRegistry 'modules/container-registry.bicep' = {
     location: location
     tags: commonTags
     sku: containerRegistrySku
-    adminUserEnabled: true
     publicNetworkAccess: !enableContainerRegistryPrivateEndpoint
     privateEndpointsSubnetId: enableContainerRegistryPrivateEndpoint ? virtualNetwork.outputs.privateEndpointsSubnetId : ''
     enablePrivateEndpoint: enableContainerRegistryPrivateEndpoint

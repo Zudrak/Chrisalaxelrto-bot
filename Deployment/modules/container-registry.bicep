@@ -11,9 +11,6 @@ param tags object = {}
 @allowed(['Basic', 'Standard', 'Premium'])
 param sku string = 'Basic'
 
-@description('Enable admin user for the Container Registry')
-param adminUserEnabled bool = true
-
 @description('Enable public network access')
 param publicNetworkAccess bool = true
 
@@ -32,7 +29,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
     name: sku
   }
   properties: {
-    adminUserEnabled: adminUserEnabled
+    adminUserEnabled: false
     publicNetworkAccess: publicNetworkAccess ? 'Enabled' : 'Disabled'
     networkRuleBypassOptions: 'AzureServices'
     policies: {
@@ -97,6 +94,4 @@ resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneG
 output containerRegistryId string = containerRegistry.id
 output containerRegistryName string = containerRegistry.name
 output loginServer string = containerRegistry.properties.loginServer
-output adminUsername string = containerRegistry.properties.adminUserEnabled ? containerRegistry.name : ''
-output adminPassword string = containerRegistry.properties.adminUserEnabled ? containerRegistry.listCredentials().passwords[0].value : ''
 output resourceId string = containerRegistry.id

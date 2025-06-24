@@ -32,7 +32,7 @@ permissions:
   contents: read
 
 jobs:
-  determine-config:
+  generate-version:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -46,7 +46,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Generated version: $VERSION"
   deploy-bot:
-    needs: determine-config
+    needs: generate-version
     runs-on: ubuntu-latest
     environment: ${{ inputs.github-environment }}
     
@@ -67,14 +67,14 @@ jobs:
 
       - name: Deploy Bot Container App
         run: |
-          pwsh -File Deployment/scripts/deploy-container-app.ps1 `
-            -ProjectName "bot" `
-            -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" `
-            -Version "${{ needs.determine-config.outputs.version }}" `
+          pwsh -File Deployment/scripts/deploy-container-app.ps1 \
+            -ProjectName "bot" \
+            -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" \
+            -Version "${{ needs.generate-version.outputs.version }}" \
             -Environment "${{ inputs.environment }}"
 
   deploy-musicstreamer:
-    needs: determine-config
+    needs: generate-version
     runs-on: ubuntu-latest
     environment: ${{ inputs.github-environment }}
     
@@ -95,8 +95,8 @@ jobs:
 
       - name: Deploy Music Streamer Container App
         run: |
-          pwsh -File Deployment/scripts/deploy-container-app.ps1 `
-            -ProjectName "music" `
-            -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" `
-            -Version "${{ needs.determine-config.outputs.version }}" `
+          pwsh -File Deployment/scripts/deploy-container-app.ps1 \
+            -ProjectName "music" \
+            -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" \
+            -Version "${{ needs.generate-version.outputs.version }}" \
             -Environment "${{ inputs.environment }}"

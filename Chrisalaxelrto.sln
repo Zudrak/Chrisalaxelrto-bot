@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chrisalaxelrto.Bot", "Chrisalaxelrto.Bot\Chrisalaxelrto.Bot.csproj", "{FF2781A7-533B-4449-A3FF-9CC69EB76FBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chrisalaxelrto.Bot", "Src\Chrisalaxelrto.Bot\Chrisalaxelrto.Bot.csproj", "{FF2781A7-533B-4449-A3FF-9CC69EB76FBC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chrisalaxelrto.MusicStreamer", "Chrisalaxelrto.MusicStreamer\Chrisalaxelrto.MusicStreamer.csproj", "{C9EA23D2-742D-4383-BD67-5679BFB5F6BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chrisalaxelrto.MusicStreamer", "Src\Chrisalaxelrto.MusicStreamer\Chrisalaxelrto.MusicStreamer.csproj", "{C9EA23D2-742D-4383-BD67-5679BFB5F6BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chrisalaxelrto.Core", "Chrisalaxelrto.Core\Chrisalaxelrto.Core.csproj", "{6ADC3C03-620D-47D0-916A-4FA050E73D4A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chrisalaxelrto.Core", "Src\Chrisalaxelrto.Core\Chrisalaxelrto.Core.csproj", "{6ADC3C03-620D-47D0-916A-4FA050E73D4A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,21 @@
+name: Deploy container apps
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Src/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-prod:
+    name: Deploy infrastructure to Production Environment
+    uses: ./.github/workflows/deploy-container-apps-template.yml
+    with:
+      environment: prod
+      github-environment: Chrisalaxelrto
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

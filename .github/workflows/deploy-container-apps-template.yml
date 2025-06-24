@@ -1,0 +1,102 @@
+name: Deploy Container Apps
+
+on:
+  workflow_call:
+    inputs:
+      github-environment:
+        description: 'Target Github Environment'
+        required: true
+        type: string
+      environment:
+        description: 'Target environment (dev, prod)'
+        required: true
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        description: 'Azure Service Principal Client ID'
+        required: true
+      AZURE_TENANT_ID:
+        description: 'Azure Tenant ID'
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        description: 'Azure Subscription ID'
+        required: true
+
+env:
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  determine-config:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION="v$(date +'%Y%m%d')-${GITHUB_SHA::8}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+  deploy-bot:
+    needs: determine-config
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.github-environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y powershell
+
+      - name: Deploy Bot Container App
+        run: |
+          pwsh -File scripts/deploy-container-app.ps1 `
+            -ProjectName "bot" `
+            -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" `
+            -Version "${{ needs.determine-config.outputs.version }}" `
+            -Environment "${{ inputs.environment }}"
+
+  deploy-musicstreamer:
+    needs: determine-config
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.github-environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y powershell
+
+      - name: Deploy Music Streamer Container App
+        run: |
+          pwsh -File scripts/deploy-container-app.ps1 `
+            -ProjectName "music" `
+            -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" `
+            -Version "${{ needs.determine-config.outputs.version }}" `
+            -Environment "${{ inputs.environment }}"

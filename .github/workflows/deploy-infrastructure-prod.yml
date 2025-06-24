@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'Deployment/**'
-      - '.github/workflows/deploy-prod.yml'
   workflow_dispatch:
 
 jobs:

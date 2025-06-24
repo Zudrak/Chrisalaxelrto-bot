@@ -11,9 +11,6 @@ param tags object = {}
 @description('The resource ID of the Container Apps Environment')
 param containerAppsEnvironmentId string
 
-@description('The Docker image for the container')
-param containerImage string
-
 @description('The name of the Key Vault')
 param keyVaultName string
 
@@ -21,13 +18,30 @@ param keyVaultName string
 param storageAccountName string
 
 @description('The minimum number of replicas')
-param minReplicas int = 1
+param minReplicas int = 0
 
 @description('The maximum number of replicas')
-param maxReplicas int = 3
+param maxReplicas int = 1
 
 @description('The environment name')
 param environmentName string
+
+@description('Enable ingress for the container app')
+param enableIngress bool = false
+
+@description('Target port for ingress (required if enableIngress is true)')
+param targetPort int = 8080
+
+@description('Enable external ingress (true for external, false for internal only)')
+param enableExternalIngress bool = false
+
+@description('The name of the Container Registry')
+param containerRegistryName string
+
+// Get reference to existing Container Registry
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  name: containerRegistryName
+}
 
 // Container App
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
@@ -41,28 +55,40 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     managedEnvironmentId: containerAppsEnvironmentId
     configuration: {
       activeRevisionsMode: 'Single'
+      ingress: enableIngress ? {
+        external: enableExternalIngress
+        targetPort: targetPort
+        allowInsecure: false
+        traffic: [
+          {
+            weight: 100
+            latestRevision: true
+          }
+        ]
+      } : null
       secrets: [
         {
-          name: 'discord-bot-token'
-          keyVaultUrl: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/discord-bot-token'
-          identity: 'system'
+          name: 'container-registry-password'
+          value: containerRegistry.listCredentials().passwords[0].value
         }
       ]
-      registries: []
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          username: containerRegistry.name
+          passwordSecretRef: 'container-registry-password'
+        }
+      ]
     }
     template: {
       containers: [
         {
-          name: 'chrisalaxelrto-bot'
-          image: containerImage
+          name: containerAppName
+          image: 'hello-world' // Placeholder image - will be updated during deployment
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'
               value: environmentName
-            }
-            {
-              name: 'DISCORD_BOT_TOKEN'
-              secretRef: 'discord-bot-token'
             }
             {
               name: 'AZURE_STORAGE_ACCOUNT_NAME'
@@ -74,23 +100,68 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
           ]
           resources: {
+            // Minimum resources for cost optimization
             cpu: json('0.25')
             memory: '0.5Gi'
           }
-          probes: []
+          probes: enableIngress ? [
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/health'
+                port: targetPort
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 30
+              periodSeconds: 60 // Longer intervals to reduce overhead
+              timeoutSeconds: 5
+              failureThreshold: 3
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/health/ready'
+                port: targetPort
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 30 // Longer intervals to reduce overhead
+              timeoutSeconds: 3
+              failureThreshold: 3
+            }
+          ] : []
         }
       ]
       scale: {
         minReplicas: minReplicas
         maxReplicas: maxReplicas
-        rules: [
+        rules: enableIngress ? [
+          {
+            name: 'http-scaling'
+            http: {
+              metadata: {
+                concurrentRequests: '100' // Higher threshold to avoid unnecessary scaling
+              }
+            }
+          }
           {
             name: 'cpu-scaling'
             custom: {
               type: 'cpu'
               metadata: {
                 type: 'Utilization'
-                value: '70'
+                value: '80' // Higher threshold to avoid unnecessary scaling
+              }
+            }
+          }
+        ] : [
+          {
+            name: 'cpu-scaling'
+            custom: {
+              type: 'cpu'
+              metadata: {
+                type: 'Utilization'
+                value: '80' // Higher threshold to avoid unnecessary scaling
               }
             }
           }
@@ -145,8 +216,20 @@ resource storageAccountContributorRoleAssignment 'Microsoft.Authorization/roleAs
   }
 }
 
+// Container Registry Pull role (AcrPull)
+resource containerRegistryPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(containerRegistry.id, containerApp.id, '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+  scope: containerRegistry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull
+    principalId: containerApp.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // Outputs
 output containerAppName string = containerApp.name
 output containerAppId string = containerApp.id
-output containerAppUrl string = '' // No ingress for Discord bot
+output containerAppUrl string = enableIngress ? 'https://${containerApp.properties.configuration.ingress.fqdn}' : ''
 output principalId string = containerApp.identity.principalId
+output fqdn string = enableIngress ? containerApp.properties.configuration.ingress.fqdn : ''

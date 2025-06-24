@@ -11,16 +11,13 @@ param tags object = {}
 @description('The environment name')
 param environmentName string
 
-// Variables
-var storageAccountSku = environmentName == 'prod' ? 'Standard_GRS' : 'Standard_LRS'
-
-// Storage Account
+// Storage Account with cheapest settings
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
   tags: tags
   sku: {
-    name: storageAccountSku
+    name: 'Standard_LRS' // Cheapest replication option (Locally Redundant Storage)
   }
   kind: 'StorageV2'
   properties: {
@@ -52,66 +49,41 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       }
       keySource: 'Microsoft.Storage'
     }
-    accessTier: 'Hot'
+    accessTier: 'Cool' // Cheaper access tier for infrequent access
   }
 }
 
-// Blob Service
+// Container for application data
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
   parent: storageAccount
   name: 'default'
   properties: {
     changeFeed: {
-      enabled: false
+      enabled: false // Disabled to save costs
     }
     restorePolicy: {
-      enabled: false
+      enabled: false // Disabled to save costs
     }
     containerDeleteRetentionPolicy: {
-      enabled: true
-      days: 7
-    }
-    cors: {
-      corsRules: []
+      enabled: false // Disabled to save costs
     }
     deleteRetentionPolicy: {
-      allowPermanentDelete: false
-      enabled: true
-      days: 7
+      enabled: false // Disabled to save costs
     }
-    isVersioningEnabled: false
+    isVersioningEnabled: false // Disabled to save costs
   }
 }
 
-// Create containers for different data types
-resource logsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+// Application data container
+resource appDataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
   parent: blobService
-  name: 'logs'
+  name: 'app-data'
   properties: {
     publicAccess: 'None'
-    metadata: {}
-  }
-}
-
-resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobService
-  name: 'data'
-  properties: {
-    publicAccess: 'None'
-    metadata: {}
-  }
-}
-
-resource backupsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  parent: blobService
-  name: 'backups'
-  properties: {
-    publicAccess: 'None'
-    metadata: {}
   }
 }
 
 // Outputs
 output storageAccountName string = storageAccount.name
 output storageAccountId string = storageAccount.id
-output primaryEndpoints object = storageAccount.properties.primaryEndpoints
+output primaryBlobEndpoint string = storageAccount.properties.primaryEndpoints.blob

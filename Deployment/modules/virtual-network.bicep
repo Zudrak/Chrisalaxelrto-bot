@@ -11,10 +11,10 @@ param tags object = {}
 param vnetAddressPrefix string = '10.0.0.0/16'
 
 @description('The address prefix for the Container Apps subnet')
-param containerAppsSubnetAddressPrefix string = '10.0.1.0/23'
+param containerAppsSubnetAddressPrefix string = '10.0.2.0/23'
 
 @description('The address prefix for the private endpoints subnet')
-param privateEndpointsSubnetAddressPrefix string = '10.0.3.0/24'
+param privateEndpointsSubnetAddressPrefix string = '10.0.6.0/23'
 
 // Virtual Network
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
@@ -32,14 +32,6 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
         name: 'container-apps-subnet'
         properties: {
           addressPrefix: containerAppsSubnetAddressPrefix
-          delegations: [
-            {
-              name: 'Microsoft.App/environments'
-              properties: {
-                serviceName: 'Microsoft.App/environments'
-              }
-            }
-          ]
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Disabled'
         }

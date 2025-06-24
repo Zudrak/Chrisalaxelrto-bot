@@ -41,10 +41,10 @@ param discordBotTokenDev string
 param vnetAddressPrefix string = '10.0.0.0/16'
 
 @description('The address prefix for the Container Apps subnet')
-param containerAppsSubnetAddressPrefix string = '10.0.1.0/23'
+param containerAppsSubnetAddressPrefix string = '10.0.2.0/23'
 
 @description('The address prefix for the private endpoints subnet')
-param privateEndpointsSubnetAddressPrefix string = '10.0.3.0/24'
+param privateEndpointsSubnetAddressPrefix string = '10.0.6.0/23'
 
 @description('The SKU for the Container Registry')
 @allowed(['Basic', 'Standard', 'Premium'])
@@ -106,7 +106,6 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
     sku: {
       name: 'PerGB2018' // Pay-per-GB is most cost-effective for small usage
     }
-    retentionInDays: 7 // Minimum retention for cost savings
     features: {
       enableLogAccessUsingOnlyResourcePermissions: true
     }
@@ -152,7 +151,6 @@ module storageAccount 'modules/storage-account.bicep' = {
     storageAccountName: storageAccountName
     location: location
     tags: commonTags
-    environmentName: environmentName
   }
 }
 

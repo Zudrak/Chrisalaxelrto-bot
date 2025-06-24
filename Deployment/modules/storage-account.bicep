@@ -8,9 +8,6 @@ param location string = resourceGroup().location
 @description('Resource tags')
 param tags object = {}
 
-@description('The environment name')
-param environmentName string
-
 // Storage Account with cheapest settings
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName

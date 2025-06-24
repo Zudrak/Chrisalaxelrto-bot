@@ -66,17 +66,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           }
         ]
       } : null
-      secrets: [
-        {
-          name: 'container-registry-password'
-          value: containerRegistry.listCredentials().passwords[0].value
-        }
-      ]
       registries: [
         {
           server: containerRegistry.properties.loginServer
-          username: containerRegistry.name
-          passwordSecretRef: 'container-registry-password'
+          identity: 'system' // Use system-assigned managed identity
         }
       ]
     }

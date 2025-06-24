@@ -33,10 +33,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
     publicNetworkAccess: publicNetworkAccess ? 'Enabled' : 'Disabled'
     networkRuleBypassOptions: 'AzureServices'
     policies: {
-      retentionPolicy: {
-        status: 'enabled'
-        days: 7 // Keep images for 7 days to reduce storage costs
-      }
       trustPolicy: {
         status: 'disabled'
       }

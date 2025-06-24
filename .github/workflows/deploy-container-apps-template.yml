@@ -67,7 +67,7 @@ jobs:
 
       - name: Deploy Bot Container App
         run: |
-          pwsh -File scripts/deploy-container-app.ps1 `
+          pwsh -File Deployment/scripts/deploy-container-app.ps1 `
             -ProjectName "bot" `
             -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" `
             -Version "${{ needs.determine-config.outputs.version }}" `
@@ -95,7 +95,7 @@ jobs:
 
       - name: Deploy Music Streamer Container App
         run: |
-          pwsh -File scripts/deploy-container-app.ps1 `
+          pwsh -File Deployment/scripts/deploy-container-app.ps1 `
             -ProjectName "music" `
             -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" `
             -Version "${{ needs.determine-config.outputs.version }}" `

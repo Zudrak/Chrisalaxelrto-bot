@@ -32,21 +32,7 @@ permissions:
   contents: read
 
 jobs:
-  generate-version:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Generate version
-        id: version
-        run: |
-          VERSION="v$(date +'%Y%m%d')-${GITHUB_SHA::8}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Generated version: $VERSION"
   deploy-bot:
-    needs: generate-version
     runs-on: ubuntu-latest
     environment: ${{ inputs.github-environment }}
     
@@ -70,11 +56,9 @@ jobs:
           pwsh -File Deployment/scripts/deploy-container-app.ps1 \
             -ProjectName "bot" \
             -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" \
-            -Version "${{ needs.generate-version.outputs.version }}" \
             -Environment "${{ inputs.environment }}"
 
   deploy-musicstreamer:
-    needs: generate-version
     runs-on: ubuntu-latest
     environment: ${{ inputs.github-environment }}
     
@@ -98,5 +82,4 @@ jobs:
           pwsh -File Deployment/scripts/deploy-container-app.ps1 \
             -ProjectName "music" \
             -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" \
-            -Version "${{ needs.generate-version.outputs.version }}" \
             -Environment "${{ inputs.environment }}"

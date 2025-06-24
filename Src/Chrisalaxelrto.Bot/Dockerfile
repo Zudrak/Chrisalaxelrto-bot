@@ -9,11 +9,12 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Src/Chrisalaxelrto.Bot/Chrisalaxelrto.Bot.csproj", "Chrisalaxelrto.Bot/"]
-COPY ["Src/Chrisalaxelrto.Core/Chrisalaxelrto.Core.csproj", "Chrisalaxelrto.Core/"]
-RUN dotnet restore "./Chrisalaxelrto.Bot/Chrisalaxelrto.Bot.csproj"
-COPY . .
+
+COPY ["Src/Chrisalaxelrto.Bot/", "Chrisalaxelrto.Bot/"]
+COPY ["Src/Chrisalaxelrto.Core/", "Chrisalaxelrto.Core/"]
 WORKDIR "/src/Chrisalaxelrto.Bot"
+
+RUN dotnet restore "./Chrisalaxelrto.Bot.csproj"
 RUN dotnet build "./Chrisalaxelrto.Bot.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

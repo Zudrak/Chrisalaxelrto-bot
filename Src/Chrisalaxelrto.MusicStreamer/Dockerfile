@@ -9,11 +9,12 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Src/Chrisalaxelrto.MusicStreamer/Chrisalaxelrto.MusicStreamer.csproj", "Chrisalaxelrto.MusicStreamer/"]
-COPY ["Src/Chrisalaxelrto.Core/Chrisalaxelrto.Core.csproj", "Chrisalaxelrto.Core/"]
-RUN dotnet restore "./Chrisalaxelrto.MusicStreamer/Chrisalaxelrto.MusicStreamer.csproj"
-COPY . .
+
+COPY ["Src/Chrisalaxelrto.MusicStreamer/", "Chrisalaxelrto.MusicStreamer/"]
+COPY ["Src/Chrisalaxelrto.Core/", "Chrisalaxelrto.Core/"]
 WORKDIR "/src/Chrisalaxelrto.MusicStreamer"
+
+RUN dotnet restore "./Chrisalaxelrto.MusicStreamer.csproj"
 RUN dotnet build "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

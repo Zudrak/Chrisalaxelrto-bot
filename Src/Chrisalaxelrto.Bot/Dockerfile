@@ -9,8 +9,8 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Chrisalaxelrto.Bot/Chrisalaxelrto.Bot.csproj", "Chrisalaxelrto.Bot/"]
-COPY ["Chrisalaxelrto.Core/Chrisalaxelrto.Core.csproj", "Chrisalaxelrto.Core/"]
+COPY ["Src/Chrisalaxelrto.Bot/Chrisalaxelrto.Bot.csproj", "Chrisalaxelrto.Bot/"]
+COPY ["Src/Chrisalaxelrto.Core/Chrisalaxelrto.Core.csproj", "Chrisalaxelrto.Core/"]
 RUN dotnet restore "./Chrisalaxelrto.Bot/Chrisalaxelrto.Bot.csproj"
 COPY . .
 WORKDIR "/src/Chrisalaxelrto.Bot"

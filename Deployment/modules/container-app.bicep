@@ -77,7 +77,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: containerAppName
-          image: 'hello-world' // Placeholder image - will be updated during deployment
+          image: 'mcr.microsoft.com/k8se/quickstart:latest'
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'

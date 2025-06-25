@@ -62,6 +62,7 @@ var storageAccountName = '${applicationName}sa${environmentName}'
 var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 var vnetName = '${applicationName}-vnet-${environmentName}'
 var containerRegistryName = '${applicationName}acr${environmentName}'
+var appManagedIdentityName = '${applicationName}-mi-${environmentName}'
 
 // Common tags
 var commonTags = {
@@ -115,7 +116,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
   }
 }
 
-resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: containerEnvironmentName
   location: location
   tags: commonTags
@@ -154,6 +155,18 @@ module storageAccount 'modules/storage-account.bicep' = {
   }
 }
 
+module appManagedIdentity 'modules/managed-identity.bicep' = {
+  name: 'appManagedIdentity-deployment'
+  params: {
+    appManagedIdentityName: appManagedIdentityName
+    location: location
+    keyVaultName: keyVault.outputs.keyVaultName
+    storageAccountName: storageAccount.outputs.storageAccountName
+    containerRegistryName: containerRegistry.outputs.containerRegistryName
+    tags: commonTags
+  }
+}
+
 module botContainerApp 'modules/container-app.bicep' = {
   name: 'botContainerApp-deployment'
   params: {
@@ -161,15 +174,14 @@ module botContainerApp 'modules/container-app.bicep' = {
     location: location
     tags: commonTags
     containerAppsEnvironmentId: containerAppsEnvironment.id
-    keyVaultName: keyVault.outputs.keyVaultName
-    storageAccountName: storageAccount.outputs.storageAccountName
     minReplicas: botMinReplicas
     maxReplicas: botMaxReplicas
     environmentName: environmentName
-    enableIngress: false
+    enableIngress: true
     targetPort: 0
-    enableExternalIngress: false
+    enableExternalIngress: true
     containerRegistryName: containerRegistry.outputs.containerRegistryName
+    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
   }
 }
 
@@ -180,15 +192,14 @@ module musicStreamerContainerApp 'modules/container-app.bicep' = {
     location: location
     tags: commonTags
     containerAppsEnvironmentId: containerAppsEnvironment.id
-    keyVaultName: keyVault.outputs.keyVaultName
-    storageAccountName: storageAccount.outputs.storageAccountName
     minReplicas: musicStreamerMinReplicas
     maxReplicas: musicStreamerMaxReplicas
     environmentName: environmentName
     enableIngress: true
     targetPort: 8080
-    enableExternalIngress: false  // Internal only - accessible only within VNet
+    enableExternalIngress: true  // Internal only - accessible only within VNet
     containerRegistryName: containerRegistry.outputs.containerRegistryName
+    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
   }
 }
 
@@ -198,9 +209,7 @@ output containerAppName string = botContainerApp.outputs.containerAppName
 output containerAppUrl string = botContainerApp.outputs.containerAppUrl
 output keyVaultName string = keyVault.outputs.keyVaultName
 output storageAccountName string = storageAccount.outputs.storageAccountName
-output containerAppPrincipalId string = botContainerApp.outputs.principalId
 output musicStreamerUrl string = musicStreamerContainerApp.outputs.containerAppUrl
-output musicStreamerPrincipalId string = musicStreamerContainerApp.outputs.principalId
 output vnetId string = virtualNetwork.outputs.vnetId
 output vnetName string = virtualNetwork.outputs.vnetName
 output containerAppsSubnetId string = virtualNetwork.outputs.containerAppsSubnetId

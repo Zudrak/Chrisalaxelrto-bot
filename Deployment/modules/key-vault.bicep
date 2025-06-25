@@ -43,7 +43,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 }
 
 // Store Discord bot token as a secret
-resource discordBotTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource discordBotTokenSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
   parent: keyVault
   name: 'discord-bot-token'
   properties: {
@@ -55,7 +55,7 @@ resource discordBotTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
   }
 }
 
-resource discordBotTokenDevSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource discordBotTokenDevSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
   parent: keyVault
   name: 'discord-bot-token-dev'
   properties: {

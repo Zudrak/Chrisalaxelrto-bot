@@ -21,7 +21,7 @@ param privateEndpointsSubnetId string = ''
 param enablePrivateEndpoint bool = false
 
 // Container Registry
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-04-01' = {
   name: containerRegistryName
   location: location
   tags: tags

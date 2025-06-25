@@ -130,7 +130,7 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2025-01-01'
     }
     vnetConfiguration: {
       infrastructureSubnetId: virtualNetwork.outputs.containerAppsSubnetId
-      internal: true
+      internal: false
     }
   }
 }

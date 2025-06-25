@@ -14,6 +14,9 @@ builder.Services.AddHttpClient();
 // Add Memory Cache
 builder.Services.AddMemoryCache();
 
+// Add Health Checks
+builder.Services.AddHealthChecks();
+
 // Register music source providers
 builder.Services.AddScoped<IMusicSourceProvider, YouTubeMusicProvider>();
 

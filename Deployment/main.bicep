@@ -197,7 +197,7 @@ module musicStreamerContainerApp 'modules/container-app.bicep' = {
     environmentName: environmentName
     enableIngress: true
     targetPort: 8080
-    enableExternalIngress: true  // Internal only - accessible only within VNet
+    enableExternalIngress: true
     containerRegistryName: containerRegistry.outputs.containerRegistryName
     appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
   }

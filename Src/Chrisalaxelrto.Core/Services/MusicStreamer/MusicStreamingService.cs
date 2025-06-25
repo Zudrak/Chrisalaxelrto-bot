@@ -21,81 +21,58 @@ public class MusicStreamingService
         _logger = logger;
     }
 
-    public async Task<StreamResponse> GetStreamAsync(StreamRequest request)
+    public async Task<MusicResponse?> GetMusicResponse(string musicQuery, MusicSource source = MusicSource.YouTube)
     {
         try
         {
-            var provider = GetProviderForUrl(request.Url);
+            if (string.IsNullOrEmpty(musicQuery))
+            {
+                throw new ArgumentException("Music query cannot be null or empty", nameof(musicQuery));
+            }
+
+            TrackMetadata? metadata = null;
+            Uri? musicUri = null;
+            if (!Uri.TryCreate(musicQuery, UriKind.Absolute, out musicUri))
+            {
+                var searchResults = await SearchAsync(musicQuery, source);
+                if (!searchResults.Any())
+                {
+                    _logger.LogWarning("No results found for query: {Query}", musicQuery);
+                    return null;
+                }
+                musicUri = searchResults.First().Uri;
+                metadata = searchResults.FirstOrDefault();
+            }
+
+            var provider = GetProviderForUrl(musicUri);
+
             if (provider == null)
             {
-                return new StreamResponse
-                {
-                    Success = false,
-                    Message = "No provider found for the given URL"
-                };
+                return null;
             }
 
-            var cacheKey = $"stream_{request.Url}_{request.Quality}";
-            if (_cache.TryGetValue(cacheKey, out AudioStream? cachedStream))
+            if (metadata == null)
             {
-                return new StreamResponse
+                metadata = await provider.GetTrackMetadata(musicUri);
+                if (metadata == null)
                 {
-                    Success = true,
-                    Stream = cachedStream
-                };
+                    _logger.LogWarning("No metadata found for URL: {Url}", musicUri);
+                    return null;
+                }
             }
 
-            var stream = await provider.GetAudioStreamAsync(request.Url, request.Quality);
-            if (stream == null)
-            {
-                return new StreamResponse
-                {
-                    Success = false,
-                    Message = "Failed to extract audio stream"
-                };
-            }
-
-            _cache.Set(cacheKey, stream, TimeSpan.FromMinutes(30));
-
-            return new StreamResponse
-            {
-                Success = true,
-                Stream = stream
-            };
+            return await provider.GetMusicResponseAsync(metadata.Uri);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing stream request for URL: {Url}", request.Url);
-            return new StreamResponse
-            {
-                Success = false,
-                Message = "Internal server error"
-            };
+            _logger.LogError(ex, "Error processing stream request for query: {musicQuery}", musicQuery);
+            return null;
         }
     }
 
-    public async Task<Stream> GetAudioDataAsync(string url)
+    public async Task<IEnumerable<TrackMetadata>> SearchAsync(string query, MusicSource? source = null, int maxResults = 10)
     {
-        var provider = GetProviderForUrl(url);
-        if (provider == null)
-        {
-            throw new InvalidOperationException("No provider found for the given URL");
-        }
-
-        var stream = await provider.GetAudioStreamAsync(url);
-        if (stream?.StreamUrl == null)
-        {
-            throw new InvalidOperationException("Failed to get stream URL");
-        }
-
-        return await provider.GetAudioDataAsync(stream.StreamUrl);
-    }
-
-    public async Task<IEnumerable<AudioStream>> SearchAsync(string query, string? source = null, int maxResults = 10)
-    {
-        var providers = string.IsNullOrEmpty(source) 
-            ? _providers 
-            : _providers.Where(p => p.SourceName.Equals(source, StringComparison.OrdinalIgnoreCase));
+        var providers = source == null ? _providers : _providers.Where(p => p.Source == source);
 
         var tasks = providers.Select(p => p.SearchAsync(query, maxResults));
         var results = await Task.WhenAll(tasks);
@@ -103,13 +80,13 @@ public class MusicStreamingService
         return results.SelectMany(r => r).Take(maxResults);
     }
 
-    private IMusicSourceProvider? GetProviderForUrl(string url)
+    private IMusicSourceProvider? GetProviderForUrl(Uri url)
     {
         return _providers.FirstOrDefault(p => p.CanHandle(url));
     }
 
-    public IEnumerable<string> GetAvailableSources()
+    public IEnumerable<MusicSource> GetAvailableSources()
     {
-        return _providers.Select(p => p.SourceName);
+        return _providers.Select(p => p.Source);
     }
 }

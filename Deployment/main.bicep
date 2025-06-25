@@ -116,6 +116,21 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
   }
 }
 
+// Application Insights for telemetry and monitoring
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: '${applicationName}-ai-${environmentName}'
+  location: location
+  tags: commonTags
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
+    IngestionMode: 'LogAnalytics'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: containerEnvironmentName
   location: location
@@ -167,24 +182,6 @@ module appManagedIdentity 'modules/managed-identity.bicep' = {
   }
 }
 
-module botContainerApp 'modules/container-app.bicep' = {
-  name: 'botContainerApp-deployment'
-  params: {
-    containerAppName: containerAppName
-    location: location
-    tags: commonTags
-    containerAppsEnvironmentId: containerAppsEnvironment.id
-    minReplicas: botMinReplicas
-    maxReplicas: botMaxReplicas
-    environmentName: environmentName
-    enableIngress: true
-    targetPort: 0
-    enableExternalIngress: true
-    containerRegistryName: containerRegistry.outputs.containerRegistryName
-    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
-  }
-}
-
 module musicStreamerContainerApp 'modules/container-app.bicep' = {
   name: 'musicStreamerContainerApp-deployment'
   params: {
@@ -194,12 +191,37 @@ module musicStreamerContainerApp 'modules/container-app.bicep' = {
     containerAppsEnvironmentId: containerAppsEnvironment.id
     minReplicas: musicStreamerMinReplicas
     maxReplicas: musicStreamerMaxReplicas
-    environmentName: environmentName
     enableIngress: true
     targetPort: 8080
     enableExternalIngress: true
     containerRegistryName: containerRegistry.outputs.containerRegistryName
     appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
+    environmentVariables: {
+      ASPNETCORE_ENVIRONMENT: environmentName
+      ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
+    }
+  }
+}
+
+module botContainerApp 'modules/container-app.bicep' = {
+  name: 'botContainerApp-deployment'
+  params: {
+    containerAppName: containerAppName
+    location: location
+    tags: commonTags
+    containerAppsEnvironmentId: containerAppsEnvironment.id
+    minReplicas: botMinReplicas
+    maxReplicas: botMaxReplicas
+    enableIngress: true
+    targetPort: 0
+    enableExternalIngress: true
+    containerRegistryName: containerRegistry.outputs.containerRegistryName
+    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
+    environmentVariables: {
+      ASPNETCORE_ENVIRONMENT: environmentName
+      ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
+      MusicStreamerBaseUrl: musicStreamerContainerApp.outputs.containerAppUrl
+    }
   }
 }
 
@@ -218,3 +240,4 @@ output musicStreamerInternalFqdn string = musicStreamerContainerApp.outputs.fqdn
 output containerRegistryName string = containerRegistry.outputs.containerRegistryName
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 output containerRegistryId string = containerRegistry.outputs.containerRegistryId
+output applicationInsightsInstrumentationKey string = applicationInsights.properties.InstrumentationKey

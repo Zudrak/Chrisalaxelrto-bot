@@ -14,6 +14,8 @@ static class PorebazuExtensions
     public static IServiceCollection AddPorebazuServices(this IServiceCollection services)
     {
         services.AddSingleton<VoiceChannelService>();
+        services.AddHttpClient<MusicStreamerClient>();
+
         return services;
     }
     public static IHost AddPorebazuCommands(this IHost host)

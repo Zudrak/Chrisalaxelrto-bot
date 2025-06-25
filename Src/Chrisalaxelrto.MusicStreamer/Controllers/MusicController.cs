@@ -1,11 +1,12 @@
 using Chrisalaxelrto.Core.Models.MusicStreamer;
+using Chrisalaxelrto.Core.Providers.MusicStreamer;
 using Chrisalaxelrto.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chrisalaxelrto.MusicStreamer.Controllers;
 
 [ApiController]
-[Route("api/music")]
+[Route("music")]
 public class MusicController : ControllerBase
 {
     private readonly MusicStreamingService _musicService;
@@ -17,56 +18,54 @@ public class MusicController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("stream")]
-    public async Task<ActionResult<StreamResponse>> GetStream([FromBody] StreamRequest request)
-    {
-        if (string.IsNullOrEmpty(request.Url))
-        {
-            return BadRequest("URL is required");
-        }
 
-        var result = await _musicService.GetStreamAsync(request);
-        
-        if (!result.Success)
-        {
-            return BadRequest(result.Message);
-        }
-
-        return Ok(result);
-    }
-
-    [HttpGet("stream/audio")]
-    public async Task<IActionResult> StreamAudio([FromQuery] string url, [FromQuery] AudioQuality quality = AudioQuality.Medium)
+    [HttpGet("stream")]
+    public async Task<IActionResult> StreamAudio([FromQuery] string musicQuery, [FromQuery] AudioQuality quality = AudioQuality.VeryHigh)
     {
         try
         {
-            var streamRequest = new StreamRequest { Url = url, Quality = quality };
-            var streamInfo = await _musicService.GetStreamAsync(streamRequest);
-            
-            if (!streamInfo.Success || streamInfo.Stream == null)
+            if (string.IsNullOrEmpty(musicQuery))
+            {
+                return BadRequest("Music query is required");
+            }
+
+            var musicResponse = await _musicService.GetMusicResponse(musicQuery);
+
+            if (musicResponse == null)
             {
                 return BadRequest("Failed to get stream information");
             }
 
-            var audioStream = await _musicService.GetAudioDataAsync(url);
-            
-            return new FileStreamResult(audioStream, "audio/mpeg")
+            // Ensure ContentType.MediaType is not null before accessing it
+            var mediaType = musicResponse.ContentType?.MediaType;
+            if (string.IsNullOrEmpty(mediaType))
             {
-                FileDownloadName = $"{streamInfo.Stream.Title}.mp3",
-                EnableRangeProcessing = true
+                return BadRequest("Invalid media type in response");
+            }
+
+            // Serialize metadata to JSON
+            var metadataJson = System.Text.Json.JsonSerializer.Serialize(musicResponse.TrackMetadata);
+
+            // Add metadata as a custom header
+            Response.Headers.Append("X-Track-Metadata", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(metadataJson)));
+
+            return new FileStreamResult(musicResponse.Stream, mediaType)
+            {
+                EnableRangeProcessing = true,
+                FileDownloadName = musicResponse.TrackMetadata.Title + "." + mediaType.Split('/')[1]
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error streaming audio for URL: {Url}", url);
+            _logger.LogError(ex, "Error streaming audio");
             return StatusCode(500, "Internal server error");
         }
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<AudioStream>>> Search(
+    public async Task<ActionResult<IEnumerable<TrackMetadata>>> Search(
         [FromQuery] string query,
-        [FromQuery] string? source = null,
+        [FromQuery] MusicSource? source = null,
         [FromQuery] int maxResults = 10)
     {
         if (string.IsNullOrEmpty(query))
@@ -76,31 +75,5 @@ public class MusicController : ControllerBase
 
         var results = await _musicService.SearchAsync(query, source, maxResults);
         return Ok(results);
-    }
-
-    [HttpGet("sources")]
-    public ActionResult<IEnumerable<string>> GetAvailableSources()
-    {
-        var sources = _musicService.GetAvailableSources();
-        return Ok(sources);
-    }
-
-    [HttpGet("info")]
-    public async Task<ActionResult<AudioStream>> GetTrackInfo([FromQuery] string url)
-    {
-        if (string.IsNullOrEmpty(url))
-        {
-            return BadRequest("URL is required");
-        }
-
-        var streamRequest = new StreamRequest { Url = url };
-        var result = await _musicService.GetStreamAsync(streamRequest);
-        
-        if (!result.Success || result.Stream == null)
-        {
-            return BadRequest(result.Message);
-        }
-
-        return Ok(result.Stream);
     }
 }

@@ -6,6 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Azure.Identity;
 using NetCord.Hosting.Services.Commands;
 using Chrisalaxelrto.Bot.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -28,6 +30,15 @@ if (string.IsNullOrEmpty(keyVaultUri))
     throw new InvalidOperationException("AzureKeyVaultUri configuration is required.");
 }
 builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+
+builder.Services.AddApplicationInsightsTelemetryWorkerService(options =>
+{
+    options.ConnectionString = builder.Configuration.GetConnectionString("ApplicationInsights");
+});
+
+builder.Services.AddHealthChecks()
+    .AddCheck("Self", () => HealthCheckResult.Healthy("The service is healthy."));
+builder.Services.AddHostedService<HealthCheckHttpService>();
 
 var token = isLocal ? builder.Configuration["discord-bot-token-dev"] : builder.Configuration["discord-bot-token"];
 builder.Services

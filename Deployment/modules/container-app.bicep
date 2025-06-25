@@ -17,9 +17,6 @@ param minReplicas int = 0
 @description('The maximum number of replicas')
 param maxReplicas int = 1
 
-@description('The environment name')
-param environmentName string
-
 @description('Enable ingress for the container app')
 param enableIngress bool = false
 
@@ -32,9 +29,11 @@ param enableExternalIngress bool = false
 @description('The name of the Container Registry')
 param containerRegistryName string
 
-
 @description('The name of the Container Registry')
 param appManagedIdentityName string
+
+@description('Environment variables for the container app')
+param environmentVariables object = {}
 
 // Get reference to existing Container Registry
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
@@ -83,12 +82,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: containerAppName
           image: 'chrisalaxelrtoacrprod.azurecr.io/samples/hello-world:latest'
-          env: [
-            {
-              name: 'ASPNETCORE_ENVIRONMENT'
-              value: environmentName
-            }
-          ]
+          env: [for envVar in items(environmentVariables): {
+            name: envVar.key
+            value: envVar.value
+          }]
           resources: {
             // Minimum resources for cost optimization
             cpu: json('0.25')

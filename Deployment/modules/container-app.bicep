@@ -81,7 +81,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: containerAppName
-          image: 'chrisalaxelrtoacrprod.azurecr.io/samples/hello-world:latest'
+          image: 'mcr.microsoft.com/k8se/quickstart:latest'
           env: [for envVar in items(environmentVariables): {
             name: envVar.key
             value: envVar.value

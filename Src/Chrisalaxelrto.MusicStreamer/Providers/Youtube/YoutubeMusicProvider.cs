@@ -38,9 +38,14 @@ public class YouTubeMusicProvider : IMusicSourceProvider
             BypassProxyOnLocal = false
         };
 
-        var httpClient = new HttpClient(httpClientHandler);
+        
+        var httpClient = new HttpClient(httpClientHandler)
+        { 
+            Timeout = TimeSpan.FromSeconds(200)
+        };
         this.youtubeClient = new YoutubeClient(httpClient, cookies);
         _logger = logger;
+        this._logger.LogInformation("YouTubeMusicProvider initialized with cookies and proxy server.");
     }
 
     public bool CanHandle(Uri url)
@@ -55,7 +60,8 @@ public class YouTubeMusicProvider : IMusicSourceProvider
     {
         try
         {
-            
+            this._logger.LogInformation("Getting music response for URL: {Url}", url);
+
             var video = await youtubeClient.Videos.GetAsync(url.ToString());
             var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(url.ToString());
             
@@ -102,6 +108,8 @@ public class YouTubeMusicProvider : IMusicSourceProvider
     {
         try
         {
+            this._logger.LogInformation("Getting track metadata for URL: {Url}", url);
+
             var video = await youtubeClient.Videos.GetAsync(url.ToString());
             if (video == null)
             {
@@ -120,6 +128,8 @@ public class YouTubeMusicProvider : IMusicSourceProvider
     {
         try
         {
+            this._logger.LogInformation("Searching for: {query}", query);
+
             var searchResults = new List<TrackMetadata>();
             var videos = await youtubeClient.Search.GetVideosAsync(query).Take(maxResults);
             

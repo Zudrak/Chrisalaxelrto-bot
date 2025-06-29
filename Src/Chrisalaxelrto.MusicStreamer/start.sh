@@ -1,22 +1,18 @@
 #!/bin/bash
 set -e
 
-# Start tailscaled in background with proper permissions
-tailscaled --state-dir=/home/app/.local/share/tailscale --socket=/var/run/tailscale/tailscaled.sock --tun=userspace-networking --socks5-server=localhost:1055 &
+# Start tailscaled in background with minimal options
+echo "Starting tailscaled..."
+tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
+TAILSCALED_PID=$!
 
-# Wait for tailscaled to start and create socket
+# Wait for tailscaled to start
 echo "Waiting for tailscaled to start..."
-for i in {1..30}; do
-    if [ -S /var/run/tailscale/tailscaled.sock ]; then
-        echo "tailscaled socket created"
-        break
-    fi
-    sleep 1
-done
+sleep 10
 
-# Check if socket exists
-if [ ! -S /var/run/tailscale/tailscaled.sock ]; then
-    echo "ERROR: tailscaled socket not found after 30 seconds"
+# Check if tailscaled process is still running
+if ! kill -0 $TAILSCALED_PID 2>/dev/null; then
+    echo "ERROR: tailscaled process died"
     exit 1
 fi
 

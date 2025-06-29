@@ -12,15 +12,20 @@ using YoutubeExplode.Videos.Streams;
 
 public class YouTubeMusicProvider : IMusicSourceProvider
 {
-    private readonly YoutubeClient _youtubeClient;
-
+    private readonly YoutubeClient youtubeClient;
     private readonly ILogger<YouTubeMusicProvider> _logger;
 
     public MusicSource Source => MusicSource.YouTube;
 
     public YouTubeMusicProvider(HttpClient httpClient, ILogger<YouTubeMusicProvider> logger, IConfiguration configuration)
     {
-        _youtubeClient = new YoutubeClient(httpClient);
+        var cookies = CookieParser.ParseCookies(configuration["youtube-cookies"] ?? string.Empty);
+        if (cookies == null)
+        {
+            throw new ArgumentException("Invalid YouTube cookies provided in configuration.");
+        }
+
+        this.youtubeClient = new YoutubeClient(httpClient, cookies);
         _logger = logger;
     }
 
@@ -36,8 +41,9 @@ public class YouTubeMusicProvider : IMusicSourceProvider
     {
         try
         {
-            var video = await _youtubeClient.Videos.GetAsync(url.ToString());
-            var streamManifest = await _youtubeClient.Videos.Streams.GetManifestAsync(url.ToString());
+            
+            var video = await youtubeClient.Videos.GetAsync(url.ToString());
+            var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(url.ToString());
             
             var audioStreamInfo = GetBestAudioStream(streamManifest, quality);
             if (audioStreamInfo == null)
@@ -45,7 +51,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
                 _logger.LogWarning("No suitable audio stream found for video: {VideoId}", video.Id);
                 return null;
             }
-            var stream = await _youtubeClient.Videos.Streams.GetAsync(audioStreamInfo);
+            var stream = await youtubeClient.Videos.Streams.GetAsync(audioStreamInfo);
             if (stream == null)
             {
                 _logger.LogWarning("Failed to get audio stream for video: {VideoId}", video.Id);
@@ -77,11 +83,12 @@ public class YouTubeMusicProvider : IMusicSourceProvider
             return null;
         }
     }
+    
     public async Task<TrackMetadata?> GetTrackMetadata(Uri url)
     {
         try
         {
-            var video = await _youtubeClient.Videos.GetAsync(url.ToString());
+            var video = await youtubeClient.Videos.GetAsync(url.ToString());
             if (video == null)
             {
                 return null;
@@ -100,7 +107,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
         try
         {
             var searchResults = new List<TrackMetadata>();
-            var videos = await _youtubeClient.Search.GetVideosAsync(query).Take(maxResults);
+            var videos = await youtubeClient.Search.GetVideosAsync(query).Take(maxResults);
             
             foreach (var video in videos)
             {
@@ -115,6 +122,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
             return Enumerable.Empty<TrackMetadata>();
         }
     }
+    
     private TrackMetadata ConvertVideoSearchResultToTrackMetadata(IVideo video)
     {
         return new TrackMetadata

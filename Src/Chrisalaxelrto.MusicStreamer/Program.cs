@@ -58,7 +58,7 @@ if (string.IsNullOrEmpty(cookieString))
 }
 
 // Register music source providers
-builder.Services.AddHttpClient<IMusicSourceProvider, YouTubeMusicProvider>();
+builder.Services.AddTransient<IMusicSourceProvider, YouTubeMusicProvider>();
 
 // Register music streaming service
 builder.Services.AddScoped<MusicStreamingService>();

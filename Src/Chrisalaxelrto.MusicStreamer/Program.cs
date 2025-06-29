@@ -1,7 +1,7 @@
 using Azure.Identity;
 using Chrisalaxelrto.Core.Providers.MusicStreamer;
 using Chrisalaxelrto.Core.Services;
-using Chrisalaxelrto.MusicStreamer.Providers;
+using Chrisalaxelrto.MusicStreamer.Providers.Youtube;
 
 var builder = WebApplication.CreateBuilder(args);
 

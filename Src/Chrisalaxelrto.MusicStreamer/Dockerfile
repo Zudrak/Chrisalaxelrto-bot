@@ -19,7 +19,7 @@ RUN dotnet build "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION
 
 RUN curl -fsSL https://tailscale.com/install.sh | sh
 ARG TAILSCALE_AUTH_KEY
-RUN sudo tailscale up --auth-key=$TAILSCALE_AUTH_KEY
+RUN tailscale up --auth-key=$TAILSCALE_AUTH_KEY
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release

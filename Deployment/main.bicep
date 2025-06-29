@@ -62,6 +62,7 @@ var storageAccountName = '${applicationName}sa${environmentName}'
 var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 var vnetName = '${applicationName}-vnet-${environmentName}'
 var containerRegistryName = '${applicationName}acr${environmentName}'
+var appManagedIdentityName = '${applicationName}-mi-${environmentName}'
 
 // Common tags
 var commonTags = {
@@ -169,6 +170,18 @@ module storageAccount 'modules/storage-account.bicep' = {
   }
 }
 
+module appManagedIdentity 'modules/managed-identity.bicep' = {
+  name: 'appManagedIdentity-deployment'
+  params: {
+    appManagedIdentityName: appManagedIdentityName
+    location: location
+    keyVaultName: keyVault.outputs.keyVaultName
+    storageAccountName: storageAccount.outputs.storageAccountName
+    containerRegistryName: containerRegistry.outputs.containerRegistryName
+    tags: commonTags
+  }
+}
+
 module musicStreamerContainerApp 'modules/container-app.bicep' = {
   name: 'musicStreamerContainerApp-deployment'
   params: {
@@ -182,11 +195,11 @@ module musicStreamerContainerApp 'modules/container-app.bicep' = {
     targetPort: 8080
     enableExternalIngress: true
     containerRegistryName: containerRegistry.outputs.containerRegistryName
-    keyVaultName: keyVault.outputs.keyVaultName
-    storageAccountName: storageAccount.outputs.storageAccountName
+    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
     environmentVariables: {
       ASPNETCORE_ENVIRONMENT: environmentName
       ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
+      ManagedIdentityClientId: appManagedIdentity.outputs.clientId
     }
   }
 }
@@ -204,12 +217,12 @@ module botContainerApp 'modules/container-app.bicep' = {
     targetPort: 0
     enableExternalIngress: true
     containerRegistryName: containerRegistry.outputs.containerRegistryName
-    keyVaultName: keyVault.outputs.keyVaultName
-    storageAccountName: storageAccount.outputs.storageAccountName
+    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
     environmentVariables: {
       ASPNETCORE_ENVIRONMENT: environmentName
       ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
       MusicStreamerBaseUrl: musicStreamerContainerApp.outputs.containerAppUrl
+      ManagedIdentityClientId: appManagedIdentity.outputs.clientId
     }
   }
 }

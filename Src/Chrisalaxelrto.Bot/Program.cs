@@ -29,7 +29,14 @@ if (string.IsNullOrEmpty(keyVaultUri))
 {
     throw new InvalidOperationException("AzureKeyVaultUri configuration is required.");
 }
-builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+builder.Configuration.AddAzureKeyVault(
+    new Uri(keyVaultUri),
+    new DefaultAzureCredential(
+        new DefaultAzureCredentialOptions
+        {
+            ManagedIdentityClientId = builder.Configuration["ManagedIdentityClientId"]
+        }
+    ));
 
 builder.Services.AddApplicationInsightsTelemetryWorkerService(options =>
 {

@@ -50,8 +50,15 @@ builder.Services.AddMemoryCache();
 // Add Health Checks
 builder.Services.AddHealthChecks();
 
+// Load cookies from configuration
+var cookieString = builder.Configuration["youtube-cookies"];
+if (string.IsNullOrEmpty(cookieString))
+{
+    throw new InvalidOperationException("YouTubeCookies configuration is required.");
+}
+
 // Register music source providers
-builder.Services.AddScoped<IMusicSourceProvider, YouTubeMusicProvider>();
+builder.Services.AddHttpClient<IMusicSourceProvider, YouTubeMusicProvider>();
 
 // Register music streaming service
 builder.Services.AddScoped<MusicStreamingService>();

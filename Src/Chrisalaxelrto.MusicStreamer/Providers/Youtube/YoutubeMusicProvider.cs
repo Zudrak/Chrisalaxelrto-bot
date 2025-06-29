@@ -20,15 +20,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
 
     public YouTubeMusicProvider(HttpClient httpClient, ILogger<YouTubeMusicProvider> logger, IConfiguration configuration)
     {
-        // Load cookies from configuration
-        var cookieString = configuration["youtube-cookies"];
-        if (string.IsNullOrEmpty(cookieString))
-        {
-            throw new InvalidOperationException("YouTubeCookies configuration is required.");
-        }
-
-        var cookies = CookieParser.ParseNetscapeCookies(cookieString);
-        _youtubeClient = new YoutubeClient(httpClient, cookies);
+        _youtubeClient = new YoutubeClient(httpClient);
         _logger = logger;
     }
 

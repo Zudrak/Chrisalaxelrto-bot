@@ -1,10 +1,6 @@
 #!/bin/bash
 set -e
 
-# Create tailscale directories
-mkdir -p /var/run/tailscale
-mkdir -p /home/app/.local/share/tailscale
-
 # Start tailscaled in background with proper permissions
 tailscaled --state-dir=/home/app/.local/share/tailscale --socket=/var/run/tailscale/tailscaled.sock --tun=userspace-networking --socks5-server=localhost:1055 &
 

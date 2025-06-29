@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 var isLocal = string.IsNullOrEmpty(env);
 var configFile = isLocal ? "appsettings.json" : $"appsettings.{env}.json";
-var configBasePath = isLocal ? Directory.GetCurrentDirectory() : "/var/www/";
+var configBasePath = isLocal ? Directory.GetCurrentDirectory() : Directory.GetCurrentDirectory();
 
 // Explicitly set up configuration
 builder.Configuration.SetBasePath(configBasePath)

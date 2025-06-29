@@ -12,7 +12,7 @@ param applicationName string = 'chrisalaxelrto'
 @description('The minimum number of replicas for the container app')
 @minValue(0)
 @maxValue(10)
-param botMinReplicas int = 0
+param botMinReplicas int = 1
 
 @description('The maximum number of replicas for the container app')
 @minValue(1)

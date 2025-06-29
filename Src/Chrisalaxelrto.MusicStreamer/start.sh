@@ -1,9 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "Connecting to Tailscale..."
-tailscale up --auth-key=$TAILSCALE_AUTH_KEY
-echo "Connected to Tailscale"
+# Start tailscaled in the background
+/usr/local/bin/tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
+sleep 2
+
+# Authenticate with Tailscale
+/usr/local/bin/tailscale up --authkey=${TAILSCALE_AUTH_KEY}
 
 # Start the .NET application
 echo "Starting .NET application..."

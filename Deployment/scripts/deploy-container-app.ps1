@@ -38,7 +38,7 @@ Write-Host "Registry: $Registry" -ForegroundColor White
 Write-Host "Image: ${ImageName}:$Version" -ForegroundColor White
 Write-Host "Dockerfile: $DockerfilePath" -ForegroundColor White
 Write-Host "Build Context: $BuildContext" -ForegroundColor White
-Write-Host "Tailscale API Key: $($tailscaleApiKey.Length -gt 0 ? '[PROVIDED]' : '[NOT PROVIDED]')" -ForegroundColor White
+Write-Host "Tailscale API Key: $($TailscaleAuthKey.Length -gt 0 ? '[PROVIDED]' : '[NOT PROVIDED]')" -ForegroundColor White
 Write-Host "=================================" -ForegroundColor Cyan
 
 # Verify Azure CLI is logged in
@@ -62,24 +62,13 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "Building and pushing image..." -ForegroundColor Yellow
 $fullImageName = "$ImageName`:$Version"
 
-# Convert SecureString to plain text for build argument
-$TailscaleAuthKeyPlainText = ""
-if ($TailscaleAuthKey.Length -gt 0) {
-    $ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($TailscaleAuthKey)
-    try {
-        $TailscaleAuthKeyPlainText = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
-    } finally {
-        [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
-    }
-}
-
 # Build the image with build arguments
-if ([string]::IsNullOrEmpty($TailscaleAuthKeyPlainText)) {
+if ([string]::IsNullOrEmpty($TailscaleAuthKey)) {
     Write-Warning "Tailscale API key not provided. Building without Tailscale support."
     az acr build --registry $Registry --image $fullImageName --file $DockerfilePath $BuildContext
 } else {
     Write-Host "Building with Tailscale API key..." -ForegroundColor Yellow
-    az acr build --registry $Registry --image $fullImageName --file $DockerfilePath --build-arg TAILSCALE_AUTH_KEY=$TailscaleAuthKeyPlainText $BuildContext
+    az acr build --registry $Registry --image $fullImageName --file $DockerfilePath --build-arg TAILSCALE_AUTH_KEY=$TailscaleAuthKey $BuildContext
 }
 
 if ($LASTEXITCODE -ne 0) {

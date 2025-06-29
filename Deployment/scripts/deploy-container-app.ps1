@@ -10,7 +10,7 @@ param(
     [string]$Version = "latest",
     [string]$Environment = "prod",
     [string]$ApplicationName = "chrisalaxelrto",
-    [securestring]$TailscaleAuthKey = "",
+    [string]$TailscaleAuthKey = "",
     [string]$ResourceGroup = "",
     [string]$Registry = "",
     [string]$BuildContext = "."

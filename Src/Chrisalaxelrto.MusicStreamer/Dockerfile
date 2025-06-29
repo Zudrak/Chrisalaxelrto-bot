@@ -21,7 +21,7 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+FROM build AS final
 USER root
 # Declare the build argument and convert to environment variable
 ARG TAILSCALE_AUTH_KEY

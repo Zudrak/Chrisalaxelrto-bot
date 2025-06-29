@@ -170,18 +170,6 @@ module storageAccount 'modules/storage-account.bicep' = {
   }
 }
 
-module appManagedIdentity 'modules/managed-identity.bicep' = {
-  name: 'appManagedIdentity-deployment'
-  params: {
-    appManagedIdentityName: appManagedIdentityName
-    location: location
-    keyVaultName: keyVault.outputs.keyVaultName
-    storageAccountName: storageAccount.outputs.storageAccountName
-    containerRegistryName: containerRegistry.outputs.containerRegistryName
-    tags: commonTags
-  }
-}
-
 module musicStreamerContainerApp 'modules/container-app.bicep' = {
   name: 'musicStreamerContainerApp-deployment'
   params: {
@@ -195,7 +183,8 @@ module musicStreamerContainerApp 'modules/container-app.bicep' = {
     targetPort: 8080
     enableExternalIngress: true
     containerRegistryName: containerRegistry.outputs.containerRegistryName
-    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
+    keyVaultName: keyVault.outputs.keyVaultName
+    storageAccountName: storageAccount.outputs.storageAccountName
     environmentVariables: {
       ASPNETCORE_ENVIRONMENT: environmentName
       ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
@@ -216,7 +205,8 @@ module botContainerApp 'modules/container-app.bicep' = {
     targetPort: 0
     enableExternalIngress: true
     containerRegistryName: containerRegistry.outputs.containerRegistryName
-    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
+    keyVaultName: keyVault.outputs.keyVaultName
+    storageAccountName: storageAccount.outputs.storageAccountName
     environmentVariables: {
       ASPNETCORE_ENVIRONMENT: environmentName
       ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString

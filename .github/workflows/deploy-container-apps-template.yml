@@ -21,6 +21,9 @@ on:
       AZURE_SUBSCRIPTION_ID:
         description: 'Azure Subscription ID'
         required: true
+      TAILSCALE_AUTH_KEY:
+        description: 'Tailscale Auth Key'
+        required: true
 
 env:
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -83,3 +86,4 @@ jobs:
             -ProjectName "music" \
             -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" \
             -Environment "${{ inputs.environment }}"
+            -TailscaleAuthKey "${{ secrets.TAILSCALE_AUTH_KEY }}"

@@ -17,6 +17,10 @@ WORKDIR "/src/Chrisalaxelrto.MusicStreamer"
 RUN dotnet restore "./Chrisalaxelrto.MusicStreamer.csproj"
 RUN dotnet build "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+ARG TAILSCALE_AUTH_KEY
+RUN sudo tailscale up --auth-key=$TAILSCALE_AUTH_KEY
+
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false

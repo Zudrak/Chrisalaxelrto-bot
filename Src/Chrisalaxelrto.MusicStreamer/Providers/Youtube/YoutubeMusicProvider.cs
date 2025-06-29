@@ -4,6 +4,7 @@ using Chrisalaxelrto.Core.Models.MusicStreamer;
 using Chrisalaxelrto.Core.Providers.MusicStreamer;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Net.Http.Headers;
 using YoutubeExplode;
 using YoutubeExplode.Common;
@@ -17,14 +18,27 @@ public class YouTubeMusicProvider : IMusicSourceProvider
 
     public MusicSource Source => MusicSource.YouTube;
 
-    public YouTubeMusicProvider(HttpClient httpClient, ILogger<YouTubeMusicProvider> logger, IConfiguration configuration)
+    public YouTubeMusicProvider(ILogger<YouTubeMusicProvider> logger, IConfiguration configuration)
     {
-        var cookies = CookieParser.ParseCookies(configuration["youtube-cookies"] ?? string.Empty);
-        if (cookies == null)
+        var base64Cookies = configuration["youtube-cookies"];
+
+        if (string.IsNullOrEmpty(base64Cookies))
         {
             throw new ArgumentException("Invalid YouTube cookies provided in configuration.");
         }
+        var cookies = CookieParser.ParseCookies(base64Cookies);
 
+        HttpClientHandler httpClientHandler = new HttpClientHandler
+        {
+            UseCookies = true,
+        };
+
+        httpClientHandler.Proxy = new WebProxy("strix-2023:3128") 
+        {
+            BypassProxyOnLocal = false
+        };
+
+        var httpClient = new HttpClient(httpClientHandler);
         this.youtubeClient = new YoutubeClient(httpClient, cookies);
         _logger = logger;
     }

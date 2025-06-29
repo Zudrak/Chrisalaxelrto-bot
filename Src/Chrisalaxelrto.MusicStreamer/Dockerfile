@@ -23,29 +23,15 @@ RUN dotnet publish "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATI
 
 FROM base AS final
 USER root
+# Declare the build argument and convert to environment variable
+ARG TAILSCALE_AUTH_KEY
+ENV TAILSCALE_AUTH_KEY=$TAILSCALE_AUTH_KEY
+
 # Install Tailscale
 RUN curl -fsSL https://tailscale.com/install.sh | sh
-ARG TAILSCALE_AUTH_KEY
-# Create startup script
-COPY <<EOF /app/start.sh
-#!/bin/bash
-set -e
 
-# Start tailscaled in background
-tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
-
-# Wait for tailscaled to start
-sleep 5
-
-# Connect to Tailscale network if auth key is provided
-if [ -n "\$TAILSCALE_AUTH_KEY" ]; then
-    tailscale up --auth-key=\$TAILSCALE_AUTH_KEY --accept-routes
-fi
-
-# Start the .NET application
-exec dotnet Chrisalaxelrto.MusicStreamer.dll
-EOF
-
+# Copy startup script
+COPY --from=build /src/Chrisalaxelrto.MusicStreamer/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 USER app

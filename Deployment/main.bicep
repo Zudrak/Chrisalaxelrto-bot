@@ -62,7 +62,6 @@ var storageAccountName = '${applicationName}sa${environmentName}'
 var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 var vnetName = '${applicationName}-vnet-${environmentName}'
 var containerRegistryName = '${applicationName}acr${environmentName}'
-var appManagedIdentityName = '${applicationName}-mi-${environmentName}'
 
 // Common tags
 var commonTags = {

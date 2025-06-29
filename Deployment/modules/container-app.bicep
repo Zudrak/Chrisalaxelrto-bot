@@ -78,7 +78,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [
         {
           server: containerRegistry.properties.loginServer
-          identity: 'SystemAssigned'
+          identity: 'system'
         }
       ]
     }

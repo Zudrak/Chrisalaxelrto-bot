@@ -33,7 +33,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
             UseCookies = true,
         };
 
-        httpClientHandler.Proxy = new WebProxy("strix-2023:3128") 
+        httpClientHandler.Proxy = new WebProxy("http://strix-2023:3128") 
         {
             BypassProxyOnLocal = false
         };

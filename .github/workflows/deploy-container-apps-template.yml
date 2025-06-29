@@ -85,5 +85,5 @@ jobs:
           pwsh -File Deployment/scripts/deploy-container-app.ps1 \
             -ProjectName "music" \
             -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" \
-            -Environment "${{ inputs.environment }}"
+            -Environment "${{ inputs.environment }}" \
             -TailscaleAuthKey "${{ secrets.TAILSCALE_AUTH_KEY }}"

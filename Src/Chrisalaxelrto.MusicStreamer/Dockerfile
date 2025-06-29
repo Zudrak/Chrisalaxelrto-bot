@@ -17,15 +17,38 @@ WORKDIR "/src/Chrisalaxelrto.MusicStreamer"
 RUN dotnet restore "./Chrisalaxelrto.MusicStreamer.csproj"
 RUN dotnet build "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-RUN curl -fsSL https://tailscale.com/install.sh | sh
-ARG TAILSCALE_AUTH_KEY
-RUN tailscale up --auth-key=$TAILSCALE_AUTH_KEY
-
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+USER root
+# Install Tailscale
+RUN curl -fsSL https://tailscale.com/install.sh | sh
+ARG TAILSCALE_AUTH_KEY
+# Create startup script
+COPY <<EOF /app/start.sh
+#!/bin/bash
+set -e
+
+# Start tailscaled in background
+tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
+
+# Wait for tailscaled to start
+sleep 5
+
+# Connect to Tailscale network if auth key is provided
+if [ -n "\$TAILSCALE_AUTH_KEY" ]; then
+    tailscale up --auth-key=\$TAILSCALE_AUTH_KEY --accept-routes
+fi
+
+# Start the .NET application
+exec dotnet Chrisalaxelrto.MusicStreamer.dll
+EOF
+
+RUN chmod +x /app/start.sh
+
+USER app
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Chrisalaxelrto.MusicStreamer.dll"]
+ENTRYPOINT ["/app/start.sh"]

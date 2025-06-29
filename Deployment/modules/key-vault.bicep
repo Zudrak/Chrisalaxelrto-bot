@@ -16,6 +16,10 @@ param discordBotToken string
 @secure()
 param discordBotTokenDev string
 
+@description('YouTube cookies to store in Key Vault')
+@secure()
+param youtubeCookies string
+
 @description('The tenant ID for Key Vault access policies')
 param tenantId string = subscription().tenantId
 
@@ -60,6 +64,18 @@ resource discordBotTokenDevSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01'
   name: 'discord-bot-token-dev'
   properties: {
     value: discordBotTokenDev
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource youtubeCookiesSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  parent: keyVault
+  name: 'youtube-cookies'
+  properties: {
+    value: youtubeCookies
     contentType: 'text/plain'
     attributes: {
       enabled: true

@@ -1,4 +1,4 @@
-namespace Chrisalaxelrto.MusicStreamer.Providers;
+namespace Chrisalaxelrto.MusicStreamer.Providers.Youtube;
 
 using Chrisalaxelrto.Core.Models.MusicStreamer;
 using Chrisalaxelrto.Core.Providers.MusicStreamer;
@@ -13,13 +13,22 @@ using YoutubeExplode.Videos.Streams;
 public class YouTubeMusicProvider : IMusicSourceProvider
 {
     private readonly YoutubeClient _youtubeClient;
+
     private readonly ILogger<YouTubeMusicProvider> _logger;
 
     public MusicSource Source => MusicSource.YouTube;
 
-    public YouTubeMusicProvider(HttpClient httpClient, ILogger<YouTubeMusicProvider> logger)
+    public YouTubeMusicProvider(HttpClient httpClient, ILogger<YouTubeMusicProvider> logger, IConfiguration configuration)
     {
-        _youtubeClient = new YoutubeClient(httpClient);
+        // Load cookies from configuration
+        var cookieString = configuration["youtube-cookies"];
+        if (string.IsNullOrEmpty(cookieString))
+        {
+            throw new InvalidOperationException("YouTubeCookies configuration is required.");
+        }
+
+        var cookies = CookieParser.ParseNetscapeCookies(cookieString);
+        _youtubeClient = new YoutubeClient(httpClient, cookies);
         _logger = logger;
     }
 

@@ -37,6 +37,10 @@ param discordBotToken string
 @secure()
 param discordBotTokenDev string
 
+@description('The youtube cookies for the application')
+@secure()
+param youtubeCookies string
+
 @description('The address prefix for the Virtual Network')
 param vnetAddressPrefix string = '10.0.0.0/16'
 
@@ -158,6 +162,7 @@ module keyVault 'modules/key-vault.bicep' = {
     tags: commonTags
     discordBotToken: discordBotToken
     discordBotTokenDev: discordBotTokenDev
+    youtubeCookies: youtubeCookies
   }
 }
 

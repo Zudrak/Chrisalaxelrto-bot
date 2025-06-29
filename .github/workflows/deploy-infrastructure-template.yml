@@ -87,5 +87,6 @@ jobs:
           --parameters @Deployment/parameters/parameters.${{ inputs.environment }}.json \
           --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
           --parameters discordBotTokenDev="${{ secrets.DISCORD_BOT_TOKEN_DEV }}" \
+          --parameters youtubeCookies="${{ secrets.YOUTUBE_COOKIES }}" \
           --name $DEPLOYMENT_NAME \
           --verbose

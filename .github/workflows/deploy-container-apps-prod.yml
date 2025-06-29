@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy-prod:
-    name: Deploy infrastructure to Production Environment
+    name: Deploy containers to production
     uses: ./.github/workflows/deploy-container-apps-template.yml
     with:
       environment: prod

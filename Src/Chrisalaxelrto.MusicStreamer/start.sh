@@ -2,7 +2,7 @@
 set -e
 
 # Start tailscaled in the background
-tailscaled --state=mem: --socket=/var/run/tailscale/tailscaled.sock --socks5-server=localhost:1055 &
+tailscaled --state=mem: --socket=/var/run/tailscale/tailscaled.sock --socks5-server=localhost:1055 --tun=userspace-networking &
 sleep 2
 
 # Authenticate with Tailscale

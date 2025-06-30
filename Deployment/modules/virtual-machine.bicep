@@ -2,7 +2,7 @@
 param vmName string
 
 @description('The Azure region for resource deployment')
-param location string = resourceGroup().location
+param location string = 'eastus2'
 
 @description('Resource tags')
 param tags object = {}

@@ -63,6 +63,7 @@ var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 var vnetName = '${applicationName}-vnet-${environmentName}'
 var containerRegistryName = '${applicationName}acr${environmentName}'
 var appManagedIdentityName = '${applicationName}-mi-${environmentName}'
+var networkInterfaceName = '${applicationName}-vm-nic-${environmentName}'
 
 // Common tags
 var commonTags = {
@@ -219,6 +220,17 @@ module botContainerApp 'modules/container-app.bicep' = {
   }
 }
 
+module networkInterface 'modules/network-interface.bicep' = {
+  name: 'networkInterface-deployment'
+  params: {
+    nicName: networkInterfaceName
+    location: location
+    tags: commonTags
+    subnetId: virtualNetwork.outputs.containerAppsSubnetId // Using container apps subnet, can be changed to privateEndpointsSubnetId if needed
+    privateIpAllocationMethod: 'Dynamic'  // Change to 'Static' and provide privateIpAddress if you need a fixed IP
+  }
+}
+
 // Outputs
 output resourceGroupName string = resourceGroup().name
 output containerAppName string = botContainerApp.outputs.containerAppName
@@ -233,3 +245,6 @@ output containerRegistryName string = containerRegistry.outputs.containerRegistr
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 output containerRegistryId string = containerRegistry.outputs.containerRegistryId
 output applicationInsightsInstrumentationKey string = applicationInsights.properties.InstrumentationKey
+output networkInterfaceName string = networkInterface.outputs.nicName
+output networkInterfaceId string = networkInterface.outputs.nicId
+output networkInterfaceIpAddress string = networkInterface.outputs.privateIpAddress

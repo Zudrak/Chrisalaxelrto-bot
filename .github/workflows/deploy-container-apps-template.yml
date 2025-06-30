@@ -60,3 +60,50 @@ jobs:
             -ProjectName "bot" \
             -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" \
             -Environment "${{ inputs.environment }}"
+
+  deploy-music-streamer:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.github-environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+            use-cache: 'true'
+
+
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y powershell
+
+      - name: Deploy Bot Container App
+        run: |
+          pwsh -File Deployment/scripts/deploy-container-app.ps1 \
+            -ProjectName "music" \
+            -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" \
+            -Environment "${{ inputs.environment }}"
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: SSH into server and run commands
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_HOST }} '
+            sudo az login --identity
+            sudo az acr login --name chrisalaxelrtoacrprod
+          '

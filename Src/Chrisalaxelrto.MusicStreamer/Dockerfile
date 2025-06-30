@@ -21,24 +21,7 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Chrisalaxelrto.MusicStreamer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM build AS final
-USER root
-# Declare the build argument and convert to environment variable
-ARG TAILSCALE_AUTH_KEY
-ENV TAILSCALE_AUTH_KEY=$TAILSCALE_AUTH_KEY
-ENV TS_USERSPACE=0
-
-# Install Tailscale
-RUN curl -fsSL https://tailscale.com/install.sh | sh
-
-# Create Tailscale directories with proper permissions
-RUN mkdir -p /var/run/tailscale && \
-    mkdir -p /home/app/.local/share/tailscale
-
-    # Copy startup script
-COPY --from=build /src/Chrisalaxelrto.MusicStreamer/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
-
+FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["/app/start.sh"]
+ENTRYPOINT ["dotnet", "Chrisalaxelrto.MusicStreamer.dll"]

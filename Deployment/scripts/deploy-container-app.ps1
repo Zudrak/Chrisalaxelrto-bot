@@ -10,10 +10,10 @@ param(
     [string]$Version = "latest",
     [string]$Environment = "prod",
     [string]$ApplicationName = "chrisalaxelrto",
-    [string]$TailscaleAuthKey = "",
     [string]$ResourceGroup = "",
     [string]$Registry = "",
-    [string]$BuildContext = "."
+    [string]$BuildContext = ".",
+    [boolean]$UpdateContainerApp = $true
 )
 
 # Set defaults based on environment
@@ -38,7 +38,6 @@ Write-Host "Registry: $Registry" -ForegroundColor White
 Write-Host "Image: ${ImageName}:$Version" -ForegroundColor White
 Write-Host "Dockerfile: $DockerfilePath" -ForegroundColor White
 Write-Host "Build Context: $BuildContext" -ForegroundColor White
-Write-Host "Tailscale API Key: $($TailscaleAuthKey.Length -gt 0 ? '[PROVIDED]' : '[NOT PROVIDED]')" -ForegroundColor White
 Write-Host "=================================" -ForegroundColor Cyan
 
 # Verify Azure CLI is logged in
@@ -63,13 +62,8 @@ Write-Host "Building and pushing image..." -ForegroundColor Yellow
 $fullImageName = "$ImageName`:$Version"
 
 # Build the image with build arguments
-if ([string]::IsNullOrEmpty($TailscaleAuthKey)) {
-    Write-Warning "Tailscale API key not provided. Building without Tailscale support."
-    az acr build --registry $Registry --image $fullImageName --file $DockerfilePath $BuildContext
-} else {
-    Write-Host "Building with Tailscale API key..." -ForegroundColor Yellow
-    az acr build --registry $Registry --image $fullImageName --file $DockerfilePath --build-arg TAILSCALE_AUTH_KEY=$TailscaleAuthKey $BuildContext
-}
+az acr build --registry $Registry --image $fullImageName --file $DockerfilePath $BuildContext
+
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Image build failed"
@@ -77,6 +71,11 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Image built successfully: $Registry.azurecr.io/$fullImageName" -ForegroundColor Green
+
+if ($UpdateContainerApp -eq $false) {
+    Write-Host "Skipping container app update as UpdateContainerApp is set to false." -ForegroundColor Yellow
+    exit 0
+}
 
 # Update container app
 Write-Host "Updating container app..." -ForegroundColor Yellow

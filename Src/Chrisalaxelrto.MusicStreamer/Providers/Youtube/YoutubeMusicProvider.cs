@@ -33,10 +33,10 @@ public class YouTubeMusicProvider : IMusicSourceProvider
             UseCookies = true,
         };
 
-        // httpClientHandler.Proxy = new WebProxy("100.73.29.116:3128") 
-        // {
-        //     BypassProxyOnLocal = false
-        // };
+        httpClientHandler.Proxy = new WebProxy("11.0.0.2:3128") 
+        {
+            BypassProxyOnLocal = false
+        };
 
         
         var httpClient = new HttpClient(httpClientHandler)

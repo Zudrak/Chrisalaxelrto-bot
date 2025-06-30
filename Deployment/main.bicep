@@ -19,16 +19,6 @@ param botMinReplicas int = 1
 @maxValue(30)
 param botMaxReplicas int = 1
 
-@description('The minimum number of replicas for the music streamer container app')
-@minValue(0)
-@maxValue(10)
-param musicStreamerMinReplicas int = 0
-
-@description('The maximum number of replicas for the music streamer container app')
-@minValue(1)
-@maxValue(30)
-param musicStreamerMaxReplicas int = 1
-
 @description('The Discord bot token for the application')
 @secure()
 param discordBotToken string
@@ -57,9 +47,15 @@ param containerRegistrySku string = 'Basic'
 @description('Enable private endpoint for Container Registry (requires Premium SKU)')
 param enableContainerRegistryPrivateEndpoint bool = false
 
+@description('The admin username for the VM')
+param vmAdminUsername string = 'vmadmin'
+
+@description('The SSH public key for VM authentication')
+@secure()
+param vmSshPublicKey string
+
 // Variables
 var containerAppName = '${applicationName}-bot-app-${environmentName}'
-var musicStreamerContainerAppName = '${applicationName}-music-app-${environmentName}'
 var containerEnvironmentName = '${applicationName}-env-${environmentName}'
 var keyVaultName = '${applicationName}-kv-${environmentName}'
 var storageAccountName = '${applicationName}sa${environmentName}'
@@ -187,28 +183,19 @@ module appManagedIdentity 'modules/managed-identity.bicep' = {
   }
 }
 
-module musicStreamerContainerApp 'modules/container-app.bicep' = {
-  name: 'musicStreamerContainerApp-deployment'
+module virtualMachine 'modules/virtual-machine.bicep' = {
+  name: 'virtualMachine-deployment'
   params: {
-    containerAppName: musicStreamerContainerAppName
+    vmName: '${applicationName}-vm-${environmentName}'
     location: location
     tags: commonTags
-    containerAppsEnvironmentId: containerAppsEnvironment.id
-    minReplicas: musicStreamerMinReplicas
-    maxReplicas: musicStreamerMaxReplicas
-    enableIngress: true
-    targetPort: 8080
-    enableExternalIngress: true
-    containerRegistryName: containerRegistry.outputs.containerRegistryName
-    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
-    environmentVariables: {
-      ASPNETCORE_ENVIRONMENT: environmentName
-      ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
-      ManagedIdentityClientId: appManagedIdentity.outputs.clientId
-    }
+    subnetId: virtualNetwork.outputs.containerAppsSubnetId
+    subnetAddressPrefix: containerAppsSubnetAddressPrefix // Pass the subnet CIDR to the VM module
+    vmSize: 'Standard_B1ls' // Cheapest SKU
+    adminUsername: vmAdminUsername
+    sshPublicKey: vmSshPublicKey
   }
 }
-
 module botContainerApp 'modules/container-app.bicep' = {
   name: 'botContainerApp-deployment'
   params: {
@@ -226,7 +213,7 @@ module botContainerApp 'modules/container-app.bicep' = {
     environmentVariables: {
       ASPNETCORE_ENVIRONMENT: environmentName
       ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
-      MusicStreamerBaseUrl: musicStreamerContainerApp.outputs.containerAppUrl
+      MusicStreamerBaseUrl: virtualMachine.outputs.musicStreamerUrl
       ManagedIdentityClientId: appManagedIdentity.outputs.clientId
     }
   }
@@ -238,12 +225,10 @@ output containerAppName string = botContainerApp.outputs.containerAppName
 output containerAppUrl string = botContainerApp.outputs.containerAppUrl
 output keyVaultName string = keyVault.outputs.keyVaultName
 output storageAccountName string = storageAccount.outputs.storageAccountName
-output musicStreamerUrl string = musicStreamerContainerApp.outputs.containerAppUrl
 output vnetId string = virtualNetwork.outputs.vnetId
 output vnetName string = virtualNetwork.outputs.vnetName
 output containerAppsSubnetId string = virtualNetwork.outputs.containerAppsSubnetId
 output privateEndpointsSubnetId string = virtualNetwork.outputs.privateEndpointsSubnetId
-output musicStreamerInternalFqdn string = musicStreamerContainerApp.outputs.fqdn
 output containerRegistryName string = containerRegistry.outputs.containerRegistryName
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 output containerRegistryId string = containerRegistry.outputs.containerRegistryId

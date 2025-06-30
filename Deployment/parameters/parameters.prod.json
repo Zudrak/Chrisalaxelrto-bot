@@ -10,6 +10,12 @@
     },
     "applicationName": {
       "value": "chrisalaxelrto"
+    },
+    "existingVmResourceGroup": {
+      "value": "porebazu"
+    },
+    "existingVnetName": {
+      "value": "porebazu-vm-vnet"
     }
   }
 }

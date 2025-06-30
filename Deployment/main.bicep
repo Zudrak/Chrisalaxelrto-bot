@@ -47,12 +47,11 @@ param containerRegistrySku string = 'Basic'
 @description('Enable private endpoint for Container Registry (requires Premium SKU)')
 param enableContainerRegistryPrivateEndpoint bool = false
 
-@description('The admin username for the VM')
-param vmAdminUsername string = 'vmadmin'
+@description('Resource group name of the existing VM')
+param existingVmResourceGroup string = ''
 
-@description('The SSH public key for VM authentication')
-@secure()
-param vmSshPublicKey string
+@description('Name of the existing VNet where the VM is located')
+param existingVnetName string = ''
 
 // Variables
 var containerAppName = '${applicationName}-bot-app-${environmentName}'
@@ -184,18 +183,6 @@ module appManagedIdentity 'modules/managed-identity.bicep' = {
   }
 }
 
-module virtualMachine 'modules/virtual-machine.bicep' = {
-  name: 'virtualMachine-deployment'
-  params: {
-    vmName: '${applicationName}-vm-${environmentName}'
-    tags: commonTags
-    location: 'centralus'
-    subnetId: virtualNetwork.outputs.containerAppsSubnetId
-    subnetAddressPrefix: containerAppsSubnetAddressPrefix // Pass the subnet CIDR to the VM module
-    adminUsername: vmAdminUsername
-    sshPublicKey: vmSshPublicKey
-  }
-}
 module botContainerApp 'modules/container-app.bicep' = {
   name: 'botContainerApp-deployment'
   params: {
@@ -213,7 +200,6 @@ module botContainerApp 'modules/container-app.bicep' = {
     environmentVariables: {
       ASPNETCORE_ENVIRONMENT: environmentName
       ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
-      MusicStreamerBaseUrl: virtualMachine.outputs.musicStreamerUrl
       ManagedIdentityClientId: appManagedIdentity.outputs.clientId
     }
   }
@@ -229,6 +215,37 @@ module networkInterface 'modules/network-interface.bicep' = {
     privateIpAllocationMethod: 'Dynamic'  // Change to 'Static' and provide privateIpAddress if you need a fixed IP
   }
 }
+
+// Reference an existing VNet in another resource group
+resource existingVNet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
+  name: existingVnetName
+  scope: resourceGroup(existingVmResourceGroup)
+}
+
+// Create VNet Peering if enabled
+module vnetPeeringToExisting 'modules/vnet-peering.bicep' = {
+  name: 'vnet-peering-to-existing-deployment'
+  params: {
+    peeringName: '${vnetName}-to-${existingVnetName}'
+    localVNetId: virtualNetwork.outputs.vnetId
+    remoteVNetId: existingVNet.id
+    allowForwardedTraffic: true
+    allowVirtualNetworkAccess: true
+  }
+}
+
+module vnetPeeringFromExisting 'modules/vnet-peering.bicep'= {
+  name: 'vnet-peering-from-existing-deployment'
+  scope: resourceGroup(existingVmResourceGroup)
+  params: {
+    peeringName: '${existingVnetName}-to-${vnetName}'
+    localVNetId: existingVNet.id
+    remoteVNetId: virtualNetwork.outputs.vnetId
+    allowForwardedTraffic: true
+    allowVirtualNetworkAccess: true
+  }
+}
+
 
 // Outputs
 output resourceGroupName string = resourceGroup().name

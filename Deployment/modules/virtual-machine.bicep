@@ -14,7 +14,7 @@ param subnetId string
 param subnetAddressPrefix string
 
 @description('The size of the VM')
-param vmSize string = 'Standard_B1ls'
+param vmSize string = 'Standard_B1s'
 
 @description('The admin username for the VM')
 param adminUsername string

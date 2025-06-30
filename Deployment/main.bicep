@@ -188,11 +188,9 @@ module virtualMachine 'modules/virtual-machine.bicep' = {
   name: 'virtualMachine-deployment'
   params: {
     vmName: '${applicationName}-vm-${environmentName}'
-    location: location
     tags: commonTags
     subnetId: virtualNetwork.outputs.containerAppsSubnetId
     subnetAddressPrefix: containerAppsSubnetAddressPrefix // Pass the subnet CIDR to the VM module
-    vmSize: 'Standard_B1ls' // Cheapest SKU
     adminUsername: vmAdminUsername
     sshPublicKey: vmSshPublicKey
   }

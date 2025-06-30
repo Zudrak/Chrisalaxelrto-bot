@@ -103,7 +103,7 @@ jobs:
             -ProjectName "music" \
             -DockerfilePath "Src/Chrisalaxelrto.MusicStreamer/Dockerfile" \
             -Environment "${{ inputs.environment }}" \
-            -UpdateContainerApp $false
+            -UpdateContainerApp:$false
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.7.0

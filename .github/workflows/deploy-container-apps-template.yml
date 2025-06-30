@@ -21,8 +21,17 @@ on:
       AZURE_SUBSCRIPTION_ID:
         description: 'Azure Subscription ID'
         required: true
-      TAILSCALE_AUTH_KEY:
-        description: 'Tailscale Auth Key'
+      TS_OAUTH_CLIENT_ID:
+        description: 'Tailscale OAuth Client ID'
+        required: true
+      TS_OAUTH_SECRET:
+        description: 'Tailscale OAuth Secret'
+        required: true
+      SSH_PRIVATE_KEY:
+        description: 'SSH Private Key for server access'
+        required: true
+      SSH_HOST:
+        description: 'SSH Host for server access'
         required: true
 
 env:
@@ -82,7 +91,6 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
           use-cache: 'true'
-
 
       - name: Install PowerShell
         run: |

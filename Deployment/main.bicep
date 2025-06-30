@@ -19,16 +19,6 @@ param botMinReplicas int = 1
 @maxValue(30)
 param botMaxReplicas int = 1
 
-@description('The minimum number of replicas for the music streamer container app')
-@minValue(0)
-@maxValue(10)
-param musicStreamerMinReplicas int = 0
-
-@description('The maximum number of replicas for the music streamer container app')
-@minValue(1)
-@maxValue(30)
-param musicStreamerMaxReplicas int = 1
-
 @description('The Discord bot token for the application')
 @secure()
 param discordBotToken string
@@ -59,7 +49,6 @@ param enableContainerRegistryPrivateEndpoint bool = false
 
 // Variables
 var containerAppName = '${applicationName}-bot-app-${environmentName}'
-var musicStreamerContainerAppName = '${applicationName}-music-app-${environmentName}'
 var containerEnvironmentName = '${applicationName}-env-${environmentName}'
 var keyVaultName = '${applicationName}-kv-${environmentName}'
 var storageAccountName = '${applicationName}sa${environmentName}'
@@ -67,6 +56,7 @@ var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 var vnetName = '${applicationName}-vnet-${environmentName}'
 var containerRegistryName = '${applicationName}acr${environmentName}'
 var appManagedIdentityName = '${applicationName}-mi-${environmentName}'
+var networkInterfaceName = '${applicationName}-vm-nic-${environmentName}'
 
 // Common tags
 var commonTags = {
@@ -187,28 +177,6 @@ module appManagedIdentity 'modules/managed-identity.bicep' = {
   }
 }
 
-module musicStreamerContainerApp 'modules/container-app.bicep' = {
-  name: 'musicStreamerContainerApp-deployment'
-  params: {
-    containerAppName: musicStreamerContainerAppName
-    location: location
-    tags: commonTags
-    containerAppsEnvironmentId: containerAppsEnvironment.id
-    minReplicas: musicStreamerMinReplicas
-    maxReplicas: musicStreamerMaxReplicas
-    enableIngress: true
-    targetPort: 8080
-    enableExternalIngress: true
-    containerRegistryName: containerRegistry.outputs.containerRegistryName
-    appManagedIdentityName: appManagedIdentity.outputs.managedIdentityName
-    environmentVariables: {
-      ASPNETCORE_ENVIRONMENT: environmentName
-      ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
-      ManagedIdentityClientId: appManagedIdentity.outputs.clientId
-    }
-  }
-}
-
 module botContainerApp 'modules/container-app.bicep' = {
   name: 'botContainerApp-deployment'
   params: {
@@ -226,9 +194,19 @@ module botContainerApp 'modules/container-app.bicep' = {
     environmentVariables: {
       ASPNETCORE_ENVIRONMENT: environmentName
       ConnectionStrings__ApplicationInsights: applicationInsights.properties.ConnectionString
-      MusicStreamerBaseUrl: musicStreamerContainerApp.outputs.containerAppUrl
       ManagedIdentityClientId: appManagedIdentity.outputs.clientId
     }
+  }
+}
+
+module networkInterface 'modules/network-interface.bicep' = {
+  name: 'networkInterface-deployment'
+  params: {
+    nicName: networkInterfaceName
+    location: location
+    tags: commonTags
+    subnetId: virtualNetwork.outputs.containerAppsSubnetId // Using container apps subnet, can be changed to privateEndpointsSubnetId if needed
+    privateIpAllocationMethod: 'Dynamic'  // Change to 'Static' and provide privateIpAddress if you need a fixed IP
   }
 }
 
@@ -238,13 +216,14 @@ output containerAppName string = botContainerApp.outputs.containerAppName
 output containerAppUrl string = botContainerApp.outputs.containerAppUrl
 output keyVaultName string = keyVault.outputs.keyVaultName
 output storageAccountName string = storageAccount.outputs.storageAccountName
-output musicStreamerUrl string = musicStreamerContainerApp.outputs.containerAppUrl
 output vnetId string = virtualNetwork.outputs.vnetId
 output vnetName string = virtualNetwork.outputs.vnetName
 output containerAppsSubnetId string = virtualNetwork.outputs.containerAppsSubnetId
 output privateEndpointsSubnetId string = virtualNetwork.outputs.privateEndpointsSubnetId
-output musicStreamerInternalFqdn string = musicStreamerContainerApp.outputs.fqdn
 output containerRegistryName string = containerRegistry.outputs.containerRegistryName
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 output containerRegistryId string = containerRegistry.outputs.containerRegistryId
 output applicationInsightsInstrumentationKey string = applicationInsights.properties.InstrumentationKey
+output networkInterfaceName string = networkInterface.outputs.nicName
+output networkInterfaceId string = networkInterface.outputs.nicId
+output networkInterfaceIpAddress string = networkInterface.outputs.privateIpAddress

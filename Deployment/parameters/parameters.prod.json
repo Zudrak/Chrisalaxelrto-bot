@@ -10,18 +10,6 @@
     },
     "applicationName": {
       "value": "chrisalaxelrto"
-    },
-    "botMinReplicas": {
-      "value": 0
-    },
-    "botMaxReplicas": {
-      "value": 1
-    },
-    "musicStreamerMinReplicas": {
-      "value": 0
-    },
-    "musicStreamerMaxReplicas": {
-      "value": 1
     }
   }
 }

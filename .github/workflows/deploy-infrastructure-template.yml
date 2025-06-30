@@ -30,9 +30,6 @@ on:
       YOUTUBE_COOKIES:
         description: 'YouTube Cookies'
         required: true
-      SSH_PUB_KEY:
-        description: 'SSH Public Key for VM Access'
-        required: true
 
 permissions:
   id-token: write
@@ -93,6 +90,5 @@ jobs:
           --parameters discordBotToken="${{ secrets.DISCORD_BOT_TOKEN }}" \
           --parameters discordBotTokenDev="${{ secrets.DISCORD_BOT_TOKEN_DEV }}" \
           --parameters youtubeCookies="${{ secrets.YOUTUBE_COOKIES }}" \
-          --parameters vmSshPublicKey="${{ secrets.SSH_PUB_KEY }}" \
           --name $DEPLOYMENT_NAME \
           --verbose

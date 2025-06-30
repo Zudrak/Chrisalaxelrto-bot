@@ -68,7 +68,8 @@ jobs:
           pwsh -File Deployment/scripts/deploy-container-app.ps1 \
             -ProjectName "bot" \
             -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" \
-            -Environment "${{ inputs.environment }}"
+            -Environment "${{ inputs.environment }}" \
+            -UpdateContainerApp:$true
 
   deploy-music-streamer:
     runs-on: ubuntu-latest

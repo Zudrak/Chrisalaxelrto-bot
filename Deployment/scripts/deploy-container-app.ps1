@@ -13,7 +13,7 @@ param(
     [string]$ResourceGroup = "",
     [string]$Registry = "",
     [string]$BuildContext = ".",
-    [boolean]$UpdateContainerApp = $true
+    [boolean]$UpdateContainerApp
 )
 
 # Set defaults based on environment

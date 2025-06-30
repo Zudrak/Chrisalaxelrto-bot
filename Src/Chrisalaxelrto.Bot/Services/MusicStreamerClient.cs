@@ -23,7 +23,6 @@ public class MusicStreamerClient
         _baseUrl = configuration["MusicStreamerBaseUrl"] ?? throw new InvalidOperationException("MusicStreamerBaseUrl configuration is required.");
         
         _httpClient.BaseAddress = new Uri(_baseUrl);
-        _httpClient.Timeout = TimeSpan.FromSeconds(30);
     }
 
     public async Task<IEnumerable<TrackMetadata>> SearchAsync(string query, MusicSource? source = null, int maxResults = 10)

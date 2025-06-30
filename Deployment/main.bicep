@@ -205,17 +205,6 @@ module botContainerApp 'modules/container-app.bicep' = {
   }
 }
 
-module networkInterface 'modules/network-interface.bicep' = {
-  name: 'networkInterface-deployment'
-  params: {
-    nicName: networkInterfaceName
-    location: location
-    tags: commonTags
-    subnetId: virtualNetwork.outputs.containerAppsSubnetId // Using container apps subnet, can be changed to privateEndpointsSubnetId if needed
-    privateIpAllocationMethod: 'Dynamic'  // Change to 'Static' and provide privateIpAddress if you need a fixed IP
-  }
-}
-
 // Reference an existing VNet in another resource group
 resource existingVNet 'Microsoft.Network/virtualNetworks@2023-09-01' existing = {
   name: existingVnetName
@@ -261,6 +250,3 @@ output containerRegistryName string = containerRegistry.outputs.containerRegistr
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
 output containerRegistryId string = containerRegistry.outputs.containerRegistryId
 output applicationInsightsInstrumentationKey string = applicationInsights.properties.InstrumentationKey
-output networkInterfaceName string = networkInterface.outputs.nicName
-output networkInterfaceId string = networkInterface.outputs.nicId
-output networkInterfaceIpAddress string = networkInterface.outputs.privateIpAddress

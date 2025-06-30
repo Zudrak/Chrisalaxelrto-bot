@@ -34,14 +34,11 @@ RUN curl -fsSL https://tailscale.com/install.sh | sh
 # Create Tailscale directories with proper permissions
 RUN mkdir -p /var/run/tailscale && \
     mkdir -p /home/app/.local/share/tailscale && \
-    chown -R app:app /var/run/tailscale && \
-    chown -R app:app /home/app/.local/share/tailscale
-    
-# Copy startup script
+
+    # Copy startup script
 COPY --from=build /src/Chrisalaxelrto.MusicStreamer/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-USER app
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["/app/start.sh"]

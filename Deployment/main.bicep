@@ -189,6 +189,7 @@ module virtualMachine 'modules/virtual-machine.bicep' = {
   params: {
     vmName: '${applicationName}-vm-${environmentName}'
     tags: commonTags
+    location: location
     subnetId: virtualNetwork.outputs.containerAppsSubnetId
     subnetAddressPrefix: containerAppsSubnetAddressPrefix // Pass the subnet CIDR to the VM module
     adminUsername: vmAdminUsername

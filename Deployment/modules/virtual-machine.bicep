@@ -2,7 +2,7 @@
 param vmName string
 
 @description('The Azure region for resource deployment')
-param location string = 'eastus'
+param location string
 
 @description('Resource tags')
 param tags object = {}
@@ -14,7 +14,7 @@ param subnetId string
 param subnetAddressPrefix string
 
 @description('The size of the VM')
-param vmSize string = 'Standard_B1ms'
+param vmSize string = 'Standard_B1ls'
 
 @description('The admin username for the VM')
 param adminUsername string

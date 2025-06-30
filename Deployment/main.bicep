@@ -32,13 +32,13 @@ param discordBotTokenDev string
 param youtubeCookies string
 
 @description('The address prefix for the Virtual Network')
-param vnetAddressPrefix string = '10.0.0.0/16'
+param vnetAddressPrefix string = '172.16.0.0/16'
 
 @description('The address prefix for the Container Apps subnet')
-param containerAppsSubnetAddressPrefix string = '10.0.2.0/23'
+param containerAppsSubnetAddressPrefix string = '172.16.2.0/23'
 
 @description('The address prefix for the private endpoints subnet')
-param privateEndpointsSubnetAddressPrefix string = '10.0.6.0/23'
+param privateEndpointsSubnetAddressPrefix string = '172.16.6.0/23'
 
 @description('The SKU for the Container Registry')
 @allowed(['Basic', 'Standard', 'Premium'])
@@ -62,7 +62,6 @@ var logAnalyticsWorkspaceName = '${applicationName}-logs-${environmentName}'
 var vnetName = '${applicationName}-vnet-${environmentName}'
 var containerRegistryName = '${applicationName}acr${environmentName}'
 var appManagedIdentityName = '${applicationName}-mi-${environmentName}'
-var networkInterfaceName = '${applicationName}-vm-nic-${environmentName}'
 
 // Common tags
 var commonTags = {

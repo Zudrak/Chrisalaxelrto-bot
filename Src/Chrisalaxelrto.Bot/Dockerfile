@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     libsodium23 \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
-    && ldconfig
+    && ldconfig \
     && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/libopus.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/libsodium.so
 

@@ -114,17 +114,17 @@ jobs:
       - name: SSH into server and run commands
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_HOST }} '
-          sudo az login --identity
-          sudo az acr login --name chrisalaxelrtoacrprod
+          sudo az login --identity || { echo "Failed to login to Azure"; exit 1; }
+          sudo az acr login --name chrisalaxelrtoacrprod || { echo "Failed to login to ACR"; exit 1; }
           
-          sudo docker pull chrisalaxelrtoacrprod.azurecr.io/music:latest
+          sudo docker pull chrisalaxelrtoacrprod.azurecr.io/music:latest || { echo "Failed to pull the image"; exit 1; }
           
-          sudo docker stop music-container || true
-          sudo docker rm music-container || true
+          sudo docker stop music-container 2>/dev/null || echo "No container to stop"
+          sudo docker rm music-container 2>/dev/null || echo "No container to remove"
           
           sudo docker run -d \
-            --name music-container \
-            --network host \
-            --restart unless-stopped \
-            chrisalaxelrtoacrprod.azurecr.io/music:latest
+              --name music-container \
+              --network host \
+              --restart unless-stopped \
+              chrisalaxelrtoacrprod.azurecr.io/music:latest
           '

@@ -10,7 +10,18 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && ldconfig \
+    && mkdir -p /app/runtimes/linux-x64/native \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/opus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/libopus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/opus \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/libopus \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/opus.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/libopus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/opus \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/libopus \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/sodium.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/libsodium.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/sodium.so \
     && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/libsodium.so
 
 USER app

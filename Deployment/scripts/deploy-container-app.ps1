@@ -13,10 +13,13 @@ param(
     [string]$ResourceGroup = "",
     [string]$Registry = "",
     [string]$BuildContext = ".",
-    [boolean]$UpdateContainerApp
+    [string]$UpdateContainerApp = "true"
 )
 
 # Set defaults based on environment
+# Convert UpdateContainerApp string to boolean
+$UpdateContainerAppBool = $UpdateContainerApp -eq "true" -or $UpdateContainerApp -eq "1" -or $UpdateContainerApp -eq $true
+
 if ([string]::IsNullOrEmpty($ResourceGroup)) {
     $ResourceGroup = "$ApplicationName-rg-$Environment"
 }
@@ -72,7 +75,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Image built successfully: $Registry.azurecr.io/$fullImageName" -ForegroundColor Green
 
-if ($UpdateContainerApp -eq $false) {
+if ($UpdateContainerAppBool -eq $false) {
     Write-Host "Skipping container app update as UpdateContainerApp is set to false." -ForegroundColor Yellow
     exit 0
 }

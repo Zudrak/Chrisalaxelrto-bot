@@ -38,17 +38,23 @@ RUN apt-get update && apt-get install -y \
 # Copy the published app first
 COPY --from=publish /app/publish .
 
-# Create runtime directory and copy libraries
+# Create symlinks in standard library locations that .NET can find
 RUN mkdir -p /app/runtimes/linux-x64/native \
-    && cp /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/opus.so \
-    && cp /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/libopus.so \
-    && cp /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/sodium.so \
-    && cp /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/libsodium.so \
-    && chmod 755 /app/runtimes/linux-x64/native/*.so \
-    && chown -R app:app /app/runtimes
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /usr/lib/x86_64-linux-gnu/libopus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /usr/lib/x86_64-linux-gnu/opus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /usr/lib/x86_64-linux-gnu/libsodium.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /usr/lib/x86_64-linux-gnu/sodium.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/opus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/libopus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/sodium.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/libsodium.so \
+    && chown -R app:app /app/runtimes \
+    && ldconfig
 
-# Set environment variable to help with library loading
-ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu"
+# Set multiple environment variables to help with library loading
+ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:/app/runtimes/linux-x64/native"
+ENV OPUS_PATH="/usr/lib/x86_64-linux-gnu/libopus.so.0"
+ENV LIBSODIUM_PATH="/usr/lib/x86_64-linux-gnu/libsodium.so.23"
 
 USER app
 ENTRYPOINT ["dotnet", "Chrisalaxelrto.Bot.dll"]

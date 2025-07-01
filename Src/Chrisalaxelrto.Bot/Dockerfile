@@ -43,13 +43,32 @@ RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet-install.sh
 
-# Create app user
-RUN addgroup -g 1001 app && \
-    adduser -D -u 1001 -G app app
-
-# Copy the published app
+# Copy the published app first
 COPY --from=publish /app/publish .
-RUN chown -R app:app /app
+
+# Create all the directories and symlinks that .NET is looking for
+RUN mkdir -p /app/runtimes/linux-x64/native \
+    && mkdir -p /usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.6 \
+    && find /usr/lib -name "libopus.so*" -exec echo "Found opus: {}" \; \
+    && find /usr/lib -name "libsodium.so*" -exec echo "Found sodium: {}" \; \
+    && ln -sf /usr/lib/libopus.so.0 /app/runtimes/linux-x64/native/opus.so \
+    && ln -sf /usr/lib/libopus.so.0 /app/runtimes/linux-x64/native/libopus.so \
+    && ln -sf /usr/lib/libopus.so.0 /app/opus.so \
+    && ln -sf /usr/lib/libopus.so.0 /app/libopus.so \
+    && ln -sf /usr/lib/libopus.so.0 /usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.6/opus.so \
+    && ln -sf /usr/lib/libopus.so.0 /usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.6/libopus.so \
+    && ln -sf /usr/lib/libsodium.so.26 /app/runtimes/linux-x64/native/sodium.so \
+    && ln -sf /usr/lib/libsodium.so.26 /app/runtimes/linux-x64/native/libsodium.so \
+    && ln -sf /usr/lib/libsodium.so.26 /app/sodium.so \
+    && ln -sf /usr/lib/libsodium.so.26 /app/libsodium.so
+
+# Create app user and set permissions
+RUN addgroup -g 1001 app && \
+    adduser -D -u 1001 -G app app \
+    && chown -R app:app /app
+
+# Set library path for Alpine
+ENV LD_LIBRARY_PATH="/usr/lib:/lib"
 
 USER app
 EXPOSE 8080

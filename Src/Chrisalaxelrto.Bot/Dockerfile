@@ -18,18 +18,30 @@ RUN dotnet publish "./Chrisalaxelrto.Bot.csproj" -c $BUILD_CONFIGURATION -o /app
 FROM alpine:3.20 AS final
 WORKDIR /app
 
-# Install .NET runtime and native dependencies
+# Install dependencies first
 RUN apk add --no-cache \
-    dotnet9-runtime \
-    aspnetcore9-runtime \
+    bash \
+    curl \
+    icu-libs \
+    libgcc \
+    libstdc++ \
     opus \
     opus-dev \
     libsodium \
     libsodium-dev \
     ffmpeg \
-    icu-libs \
-    libgcc \
-    libstdc++
+    krb5-libs \
+    libintl \
+    openssl \
+    zlib
+
+# Install .NET 9 runtime manually
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh \
+    && chmod +x dotnet-install.sh \
+    && ./dotnet-install.sh --version latest --runtime dotnet --install-dir /usr/share/dotnet \
+    && ./dotnet-install.sh --version latest --runtime aspnetcore --install-dir /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm dotnet-install.sh
 
 # Create app user
 RUN addgroup -g 1001 app && \

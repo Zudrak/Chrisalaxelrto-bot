@@ -95,16 +95,31 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Container app updated successfully!" -ForegroundColor Green
 
-# Force restart of container app to ensure all replicas use the new image
-Write-Host "Restarting container app to ensure all replicas use the new image..." -ForegroundColor Yellow
-az containerapp revision restart `
+# Get the latest active revision to restart it
+Write-Host "Getting latest active revision..." -ForegroundColor Yellow
+$latestRevision = az containerapp revision list `
     --name $ContainerApp `
-    --resource-group $ResourceGroup
+    --resource-group $ResourceGroup `
+    --query "[?properties.active].name | [0]" `
+    --output tsv
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Warning "Container app restart failed, but deployment may still be successful"
+if ($latestRevision -and $latestRevision -ne "null") {
+    Write-Host "Found active revision: $latestRevision" -ForegroundColor White
+    
+    # Force restart of the active revision to ensure all replicas use the new image
+    Write-Host "Restarting active revision to ensure all replicas use the new image..." -ForegroundColor Yellow
+    az containerapp revision restart `
+        --name $ContainerApp `
+        --resource-group $ResourceGroup `
+        --revision $latestRevision
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Revision restart failed, but deployment may still be successful"
+    } else {
+        Write-Host "Active revision restarted successfully!" -ForegroundColor Green
+    }
 } else {
-    Write-Host "Container app restarted successfully!" -ForegroundColor Green
+    Write-Warning "Could not find active revision to restart"
 }
 
 # Show current revisions

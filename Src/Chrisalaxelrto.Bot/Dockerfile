@@ -24,6 +24,7 @@ RUN dotnet publish "./Chrisalaxelrto.Bot.csproj" -c $BUILD_CONFIGURATION -o /app
 FROM base AS final
 WORKDIR /app
 USER root
+
 # Install native dependencies required for audio processing
 RUN apt-get update && apt-get install -y \
     libopus0 \
@@ -32,15 +33,22 @@ RUN apt-get update && apt-get install -y \
     libsodium-dev \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
-    && ldconfig \
-    && mkdir -p /app/runtimes/linux-x64/native \
+    && ldconfig
+
+# Copy the published app first
+COPY --from=publish /app/publish .
+
+# Create runtime directory and copy libraries
+RUN mkdir -p /app/runtimes/linux-x64/native \
     && cp /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/opus.so \
     && cp /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/libopus.so \
     && cp /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/sodium.so \
     && cp /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/libsodium.so \
     && chmod 755 /app/runtimes/linux-x64/native/*.so \
     && chown -R app:app /app/runtimes
-    
-COPY --from=publish /app/publish .
+
+# Set environment variable to help with library loading
+ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu"
+
 USER app
 ENTRYPOINT ["dotnet", "Chrisalaxelrto.Bot.dll"]

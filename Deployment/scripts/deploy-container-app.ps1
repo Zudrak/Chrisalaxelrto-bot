@@ -95,6 +95,18 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Container app updated successfully!" -ForegroundColor Green
 
+# Force restart of container app to ensure all replicas use the new image
+Write-Host "Restarting container app to ensure all replicas use the new image..." -ForegroundColor Yellow
+az containerapp revision restart `
+    --name $ContainerApp `
+    --resource-group $ResourceGroup
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Warning "Container app restart failed, but deployment may still be successful"
+} else {
+    Write-Host "Container app restarted successfully!" -ForegroundColor Green
+}
+
 # Show current revisions
 Write-Host "Current revisions:" -ForegroundColor Cyan
 az containerapp revision list `

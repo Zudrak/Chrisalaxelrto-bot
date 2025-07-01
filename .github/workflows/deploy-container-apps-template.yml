@@ -69,7 +69,7 @@ jobs:
             -ProjectName "bot" \
             -DockerfilePath "Src/Chrisalaxelrto.Bot/Dockerfile" \
             -Environment "${{ inputs.environment }}" \
-            -UpdateContainerApp:$true
+            -UpdateContainerApp:1
 
   deploy-music-streamer:
     runs-on: ubuntu-latest

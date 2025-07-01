@@ -32,7 +32,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && ldconfig \
     && mkdir -p /app/runtimes/linux-x64/native \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/libopus.so \
-    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/libsodium.so
+    && ln -sf /usr/lib/x86_64-linux-gnu/libopus.so.0 /app/runtimes/linux-x64/native/libopus.so \
+    && ln -sf /usr/lib/x86_64-linux-gnu/libsodium.so.23 /app/runtimes/linux-x64/native/libsodium.so
+    
 COPY --from=publish /app/publish .
+USER app
 ENTRYPOINT ["dotnet", "Chrisalaxelrto.Bot.dll"]

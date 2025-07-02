@@ -71,12 +71,6 @@ public class YouTubeMusicProvider : IMusicSourceProvider
                 _logger.LogWarning("No suitable audio stream found for video: {VideoId}", video.Id);
                 return null;
             }
-            var stream = await youtubeClient.Videos.Streams.GetAsync(audioStreamInfo);
-            if (stream == null)
-            {
-                _logger.LogWarning("Failed to get audio stream for video: {VideoId}", video.Id);
-                return null;
-            }
 
             var metadata = ConvertVideoSearchResultToTrackMetadata(video);
             if (metadata == null)
@@ -93,7 +87,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
             return new MusicResponse
             {
                 ContentType = new MediaTypeHeaderValue(contentType),
-                Stream = stream,
+                StreamUrl = audioStreamInfo.Url, // Return the direct URL instead of downloading
                 TrackMetadata = metadata
             };
         }

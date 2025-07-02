@@ -84,86 +84,89 @@ public class MusicStreamerClient
         }
     }
     
-    public async Task<(Stream Stream, TrackMetadata? Metadata)> GetStreamAsync(string musicQuery, AudioQuality quality = AudioQuality.VeryHigh)
+public async Task<(Stream Stream, TrackMetadata? Metadata)> GetStreamAsync(string musicQuery, AudioQuality quality = AudioQuality.VeryHigh)
+{
+    var stopwatch = Stopwatch.StartNew();
+
+    _logger.LogInformation("Requesting music stream for query: {Query} with quality: {Quality}", musicQuery, quality);
+
+    try
     {
-        var stopwatch = Stopwatch.StartNew();
+        var queryParams = $"?musicQuery={Uri.EscapeDataString(musicQuery)}&quality={quality}";
+        
+        // Use ResponseHeadersRead to start streaming immediately without buffering
+        var response = await _httpClient.GetAsync($"music/stream{queryParams}", HttpCompletionOption.ResponseHeadersRead);
 
-        _logger.LogInformation("Requesting music stream for query: {Query} with quality: {Quality}", musicQuery, quality);
-
-        try
+        if (!response.IsSuccessStatusCode)
         {
-            var queryParams = $"?musicQuery={Uri.EscapeDataString(musicQuery)}&quality={quality}";
-            var response = await _httpClient.GetAsync($"music/stream{queryParams}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                stopwatch.Stop();
-
-                _logger.LogWarning("Music stream request failed. Query: {Query}, Status: {StatusCode}, Response: {Response}",
-                    musicQuery, response.StatusCode, errorContent);
-
-                _telemetryClient?.TrackDependency("MusicStreamer", "Stream", musicQuery, DateTime.UtcNow.Subtract(stopwatch.Elapsed), stopwatch.Elapsed, false);
-
-                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
-            }
-
-            // Parse metadata from headers
-            TrackMetadata? metadata = null;
-            if (response.Headers.TryGetValues("X-Track-Metadata", out var metadataHeaders))
-            {
-                try
-                {
-                    var metadataBase64 = metadataHeaders.First();
-                    var metadataJson = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(metadataBase64));
-                    metadata = JsonSerializer.Deserialize<TrackMetadata>(metadataJson, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    _logger.LogDebug("Successfully parsed track metadata: {Title} by {Artist}", metadata?.Title, metadata?.Artist);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to parse track metadata from response headers");
-                }
-            }
-
-            var stream = await response.Content.ReadAsStreamAsync();
+            var errorContent = await response.Content.ReadAsStringAsync();
             stopwatch.Stop();
 
-            _logger.LogInformation("Successfully retrieved music stream for '{Title}' by '{Artist}' in {ElapsedMs}ms",
-                metadata?.Title ?? "Unknown", metadata?.Artist ?? "Unknown", stopwatch.ElapsedMilliseconds);
-
-            _telemetryClient?.TrackDependency("MusicStreamer", "Stream", musicQuery, DateTime.UtcNow.Subtract(stopwatch.Elapsed), stopwatch.Elapsed, true);
-            _telemetryClient?.TrackEvent("MusicStreamSuccess", new Dictionary<string, string>
-            {
-                ["Title"] = metadata?.Title ?? "Unknown",
-                ["Artist"] = metadata?.Artist ?? "Unknown",
-                ["Source"] = metadata?.Source.ToString() ?? "Unknown",
-                ["Quality"] = quality.ToString()
-            });
-            _telemetryClient?.TrackMetric("MusicStream.Duration", stopwatch.ElapsedMilliseconds);
-
-            return (stream, metadata);
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-
-            _logger.LogError(ex, "Failed to get music stream. Query: {Query}, Quality: {Quality}", musicQuery, quality);
+            _logger.LogWarning("Music stream request failed. Query: {Query}, Status: {StatusCode}, Response: {Response}",
+                musicQuery, response.StatusCode, errorContent);
 
             _telemetryClient?.TrackDependency("MusicStreamer", "Stream", musicQuery, DateTime.UtcNow.Subtract(stopwatch.Elapsed), stopwatch.Elapsed, false);
-            _telemetryClient?.TrackException(ex, new Dictionary<string, string>
-            {
-                ["Operation"] = "GetStream",
-                ["Query"] = musicQuery,
-                ["Quality"] = quality.ToString()
-            });
 
-            throw;
+            throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
         }
+
+        // Parse metadata from headers
+        TrackMetadata? metadata = null;
+        if (response.Headers.TryGetValues("X-Track-Metadata", out var metadataHeaders))
+        {
+            try
+            {
+                var metadataBase64 = metadataHeaders.First();
+                var metadataJson = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(metadataBase64));
+                metadata = JsonSerializer.Deserialize<TrackMetadata>(metadataJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                _logger.LogDebug("Successfully parsed track metadata: {Title} by {Artist}", metadata?.Title, metadata?.Artist);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse track metadata from response headers");
+            }
+        }
+
+        // Get the stream without waiting for the entire response
+        var stream = await response.Content.ReadAsStreamAsync();
+        stopwatch.Stop();
+
+        _logger.LogInformation("Successfully started streaming for '{Title}' by '{Artist}' in {ElapsedMs}ms",
+            metadata?.Title ?? "Unknown", metadata?.Artist ?? "Unknown", stopwatch.ElapsedMilliseconds);
+
+        _telemetryClient?.TrackDependency("MusicStreamer", "Stream", musicQuery, DateTime.UtcNow.Subtract(stopwatch.Elapsed), stopwatch.Elapsed, true);
+        _telemetryClient?.TrackEvent("MusicStreamSuccess", new Dictionary<string, string>
+        {
+            ["Title"] = metadata?.Title ?? "Unknown",
+            ["Artist"] = metadata?.Artist ?? "Unknown",
+            ["Source"] = metadata?.Source.ToString() ?? "Unknown",
+            ["Quality"] = quality.ToString()
+        });
+        _telemetryClient?.TrackMetric("MusicStream.Duration", stopwatch.ElapsedMilliseconds);
+
+        return (stream, metadata);
     }
+    catch (Exception ex)
+    {
+        stopwatch.Stop();
+
+        _logger.LogError(ex, "Failed to get music stream. Query: {Query}, Quality: {Quality}", musicQuery, quality);
+
+        _telemetryClient?.TrackDependency("MusicStreamer", "Stream", musicQuery, DateTime.UtcNow.Subtract(stopwatch.Elapsed), stopwatch.Elapsed, false);
+        _telemetryClient?.TrackException(ex, new Dictionary<string, string>
+        {
+            ["Operation"] = "GetStream",
+            ["Query"] = musicQuery,
+            ["Quality"] = quality.ToString()
+        });
+
+        throw;
+    }
+}
 
     public string GetStreamUrl(string musicQuery, AudioQuality quality = AudioQuality.VeryHigh)
     {

@@ -8,6 +8,17 @@ namespace Chrisalaxelrto.Bot.Services;
 class VoiceChannelService
 {
     private IDictionary<ulong, VoiceClient> voiceClients = new Dictionary<ulong, VoiceClient>();
+
+    public async Task<bool> IsInVoiceChannel(CommandContext context)
+    {
+        var guild = context.Guild;
+        if (guild == null)
+        {
+            throw new InvalidOperationException("Guild not found. Ensure the command is used in a guild context.");
+        }
+        return voiceClients.ContainsKey(guild.Id);
+    }
+
     public async Task JoinVoiceChannel(CommandContext context, VoiceClientConfiguration? config = null)
     {
         var guild = context.Guild;
@@ -55,17 +66,19 @@ class VoiceChannelService
             voiceClients.Remove(guild.Id);
         }
     }
-    public async Task PlayStream(CommandContext context, Stream sourceStream) 
+
+    public async Task PlayStream(CommandContext context, Stream sourceStream)
     {
         var guild = context.Guild;
         if (guild == null)
         {
             throw new InvalidOperationException("Guild not found. Ensure the command is used in a guild context.");
         }
-        
+
         if (!voiceClients.TryGetValue(guild.Id, out var voiceClient))
         {
-            throw new InvalidOperationException("Could't find a voice client for this session.");
+            JoinVoiceChannel(context).Wait();
+            voiceClient = voiceClients[guild.Id];
         }
 
         var outputStream = voiceClient.CreateOutputStream();

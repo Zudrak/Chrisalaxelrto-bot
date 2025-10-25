@@ -80,7 +80,7 @@ public class YouTubeTrackProvider : ITrackSourceProvider
             return new SourceMetadata
             {
                 ContentType = new MediaTypeHeaderValue(contentType),
-                StreamUrl = audioStreamInfo.Url, // Return the direct URL instead of downloading
+                StreamUrl = audioStreamInfo.Url,
                 TrackMetadata = metadata
             };
         }

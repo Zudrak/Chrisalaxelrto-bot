@@ -3,16 +3,14 @@ using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Gateway;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
-using Azure.Identity;
 using NetCord.Hosting.Services.Commands;
 using Chrisalaxelrto.Bot.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 
 var builder = Host.CreateApplicationBuilder(args);
 
-var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var env = Environment.GetEnvironmentVariable("CHRISALAXELRTO_ENV");
 var isLocal = string.IsNullOrEmpty(env);
 var configFile = isLocal ? "appsettings.json" : $"appsettings.{env}.json";
 var configBasePath = isLocal ? Directory.GetCurrentDirectory() : Directory.GetCurrentDirectory();
@@ -24,30 +22,13 @@ builder.Configuration.SetBasePath(configBasePath)
     .AddEnvironmentVariables()
     .Build();
 
-var keyVaultUri = builder.Configuration["AzureKeyVaultUri"];
-if (string.IsNullOrEmpty(keyVaultUri))
+var token = builder.Configuration["BotToken"];
+
+if (string.IsNullOrEmpty(token))
 {
-    throw new InvalidOperationException("AzureKeyVaultUri configuration is required.");
+    throw new InvalidOperationException("Bot token is not configured. Please set the \"BotToken\" variable in appsettings.json or environment.");
 }
-builder.Configuration.AddAzureKeyVault(
-    new Uri(keyVaultUri),
-    new DefaultAzureCredential(
-        new DefaultAzureCredentialOptions
-        {
-            ManagedIdentityClientId = builder.Configuration["ManagedIdentityClientId"]
-        }
-    ));
 
-builder.Services.AddApplicationInsightsTelemetryWorkerService(options =>
-{
-    options.ConnectionString = builder.Configuration.GetConnectionString("ApplicationInsights");
-});
-
-builder.Services.AddHealthChecks()
-    .AddCheck("Self", () => HealthCheckResult.Healthy("The service is healthy."));
-builder.Services.AddHostedService<HealthCheckHttpService>();
-
-var token = isLocal ? builder.Configuration["discord-bot-token-dev"] : builder.Configuration["discord-bot-token"];
 builder.Services
     .AddDiscordGateway(config =>
     {
@@ -57,12 +38,12 @@ builder.Services
     .AddCommands()
     .AddApplicationCommands();
 
+builder.Services.AddMemoryCache();
 builder.Services.AddPorebazuEventHandlers();
 builder.Services.AddPorebazuServices();
 
 var host = builder.Build();
 
 host.AddPorebazuCommands();
-host.UseGatewayEventHandlers();
 
 await host.RunAsync();

@@ -1,51 +1,44 @@
-namespace Chrisalaxelrto.MusicStreamer.Providers.Youtube;
+namespace Chrisalaxelrto.TrackStreamer.Providers.Youtube;
 
-using Chrisalaxelrto.Core.Models.MusicStreamer;
-using Chrisalaxelrto.Core.Providers.MusicStreamer;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.Logging;
-using System.Net;
 using System.Net.Http.Headers;
+using Chrisalaxelrto.TrackStreamer.Models;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using YoutubeExplode;
 using YoutubeExplode.Common;
 using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 
-public class YouTubeMusicProvider : IMusicSourceProvider
+public class YouTubeTrackProvider : ITrackSourceProvider
 {
     private readonly YoutubeClient youtubeClient;
-    private readonly ILogger<YouTubeMusicProvider> _logger;
+    private readonly ILogger<YouTubeTrackProvider> logger;
 
-    public MusicSource Source => MusicSource.YouTube;
+    public TrackSource Source => TrackSource.YouTube;
 
-    public YouTubeMusicProvider(ILogger<YouTubeMusicProvider> logger, IConfiguration configuration)
+    public YouTubeTrackProvider(ILogger<YouTubeTrackProvider> logger, IConfiguration configuration)
     {
-        var base64Cookies = configuration["youtube-cookies"];
+        // var base64Cookies = configuration["YoutubeCookies"];
 
-        if (string.IsNullOrEmpty(base64Cookies))
-        {
-            throw new ArgumentException("Invalid YouTube cookies provided in configuration.");
-        }
-        var cookies = CookieParser.ParseCookies(base64Cookies);
+        // if (string.IsNullOrEmpty(base64Cookies))
+        // {
+        //     throw new ArgumentException("Youtube cookies are not configured. Please set the \"YoutubeCookies\" variable in appsettings.json or environment.");
+        // }
+        // var cookies = CookieParser.ParseCookies(base64Cookies);
 
         HttpClientHandler httpClientHandler = new HttpClientHandler
         {
             UseCookies = true,
         };
-
-        httpClientHandler.Proxy = new WebProxy("axel-pc:3128") 
-        {
-            BypassProxyOnLocal = false
-        };
-
         
         var httpClient = new HttpClient(httpClientHandler)
         { 
             Timeout = TimeSpan.FromSeconds(200)
         };
-        this.youtubeClient = new YoutubeClient(httpClient, cookies);
-        _logger = logger;
-        this._logger.LogInformation("YouTubeMusicProvider initialized with cookies and proxy server.");
+        youtubeClient = new YoutubeClient(httpClient);
+        this.logger = logger;
+        logger.LogInformation("YouTubeMusicProvider initialized.");
     }
 
     public bool CanHandle(Uri url)
@@ -56,11 +49,11 @@ public class YouTubeMusicProvider : IMusicSourceProvider
                stringUrl.Contains("music.youtube.com");
     }
 
-    public async Task<MusicResponse?> GetMusicResponseAsync(Uri url, AudioQuality quality = AudioQuality.VeryHigh)
+    public async Task<SourceMetadata?> GetSourceMetadata(Uri url, AudioQuality quality = AudioQuality.VeryHigh)
     {
         try
         {
-            this._logger.LogInformation("Getting music response for URL: {Url}", url);
+            logger.LogInformation("Getting music response for URL: {Url}", url);
 
             var video = await youtubeClient.Videos.GetAsync(url.ToString());
             var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(url.ToString());
@@ -68,14 +61,14 @@ public class YouTubeMusicProvider : IMusicSourceProvider
             var audioStreamInfo = GetBestAudioStream(streamManifest, quality);
             if (audioStreamInfo == null)
             {
-                _logger.LogWarning("No suitable audio stream found for video: {VideoId}", video.Id);
+                logger.LogWarning("No suitable audio stream found for video: {VideoId}", video.Id);
                 return null;
             }
 
             var metadata = ConvertVideoSearchResultToTrackMetadata(video);
             if (metadata == null)
             {
-                _logger.LogWarning("Failed to convert video metadata for video: {VideoId}", video.Id);
+                logger.LogWarning("Failed to convert video metadata for video: {VideoId}", video.Id);
                 return null;
             } 
 
@@ -84,7 +77,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
                 return null;
             }
 
-            return new MusicResponse
+            return new SourceMetadata
             {
                 ContentType = new MediaTypeHeaderValue(contentType),
                 StreamUrl = audioStreamInfo.Url, // Return the direct URL instead of downloading
@@ -93,7 +86,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting audio stream for URL: {Url}", url);
+            logger.LogError(ex, "Error getting audio stream for URL: {Url}", url);
             return null;
         }
     }
@@ -102,7 +95,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
     {
         try
         {
-            this._logger.LogInformation("Getting track metadata for URL: {Url}", url);
+            logger.LogInformation("Getting track metadata for URL: {Url}", url);
 
             var video = await youtubeClient.Videos.GetAsync(url.ToString());
             if (video == null)
@@ -113,7 +106,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting track metadata for URL: {Url}", url);
+            logger.LogError(ex, "Error getting track metadata for URL: {Url}", url);
             return null;
         }
     }
@@ -122,7 +115,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
     {
         try
         {
-            this._logger.LogInformation("Searching for: {query}", query);
+            logger.LogInformation("Searching for: {query}", query);
 
             var searchResults = new List<TrackMetadata>();
             var videos = await youtubeClient.Search.GetVideosAsync(query).Take(maxResults);
@@ -136,7 +129,7 @@ public class YouTubeMusicProvider : IMusicSourceProvider
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error searching for: {Query}", query);
+            logger.LogError(ex, "Error searching for: {Query}", query);
             return Enumerable.Empty<TrackMetadata>();
         }
     }

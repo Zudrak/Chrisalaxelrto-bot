@@ -17,12 +17,17 @@ public static class CookieParser
                 PropertyNameCaseInsensitive = true
             });
 
-            return cookies?.AsReadOnly() ?? new List<Cookie>().AsReadOnly();
+            if (cookies == null)
+            {
+                throw new Exception("Deserialized cookies are null.");
+            }
+            
+            return cookies.AsReadOnly();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to parse base64 JSON cookies. Error: {ex.Message}");
-            return new List<Cookie>().AsReadOnly();
+            throw;
         }
     }
 }

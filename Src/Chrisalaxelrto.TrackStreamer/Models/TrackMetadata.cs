@@ -1,6 +1,6 @@
-using Chrisalaxelrto.Core.Providers.MusicStreamer;
+using Chrisalaxelrto.TrackStreamer.Providers;
 
-namespace Chrisalaxelrto.Core.Models.MusicStreamer;
+namespace Chrisalaxelrto.TrackStreamer.Models;
 
 public class TrackMetadata
 {
@@ -10,6 +10,6 @@ public class TrackMetadata
     public TimeSpan Duration { get; set; }
     public string ThumbnailUrl { get; set; } = string.Empty;
     required public Uri Uri { get; set; }
-    public MusicSource Source { get; set; }
+    public TrackSource Source { get; set; }
     public DateTime CreatedAt { get; set; }
 }

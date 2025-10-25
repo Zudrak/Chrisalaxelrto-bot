@@ -11,7 +11,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 COPY ["Src/Chrisalaxelrto.Bot/", "Chrisalaxelrto.Bot/"]
-COPY ["Src/Chrisalaxelrto.Core/", "Chrisalaxelrto.Core/"]
+COPY ["Src/Chrisalaxelrto.TrackStreamer/", "Chrisalaxelrto.TrackStreamer/"]
 WORKDIR "/src/Chrisalaxelrto.Bot"
 
 RUN dotnet restore "./Chrisalaxelrto.Bot.csproj"
@@ -19,6 +19,7 @@ RUN dotnet build "./Chrisalaxelrto.Bot.csproj" -c $BUILD_CONFIGURATION -o /app/b
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
+ARG CHRISALAXELRTO_ENV=Prod
 RUN dotnet publish "./Chrisalaxelrto.Bot.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final

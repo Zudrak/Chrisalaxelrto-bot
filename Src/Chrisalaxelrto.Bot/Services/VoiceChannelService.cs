@@ -2,7 +2,6 @@ using NetCord.Gateway;
 using NetCord.Gateway.Voice;
 using NetCord.Services.Commands;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Chrisalaxelrto.Bot.Services;
 
@@ -109,7 +108,7 @@ class VoiceChannelService
         var outputTask = ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream);
 
         // Close stdin after copying is complete to signal end of input
-        inputTask.ContinueWith(_ => ffmpeg.StandardInput.Close());
+        await inputTask.ContinueWith(_ => ffmpeg.StandardInput.Close());
 
         await Task.WhenAll(inputTask, outputTask);
         await outputStream.FlushAsync();

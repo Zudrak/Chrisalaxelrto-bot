@@ -1,12 +1,12 @@
 name: Deploy infrastructure
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'Deployment/**'
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'Deployment/**'
+#   workflow_dispatch:
 
 jobs:
   deploy-prod:

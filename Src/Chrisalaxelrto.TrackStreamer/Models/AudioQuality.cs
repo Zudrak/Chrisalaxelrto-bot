@@ -1,4 +1,4 @@
-namespace Chrisalaxelrto.Core.Models.MusicStreamer;
+namespace Chrisalaxelrto.TrackStreamer.Models;
 
 public enum AudioQuality
 {

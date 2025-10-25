@@ -1,12 +1,12 @@
 name: Validate Infrastructure
 
-on:
-  pull_request:
-    paths:
-      - 'Deployment/**'
-    branches:
-      - main
-      - develop
+# on:
+#   pull_request:
+#     paths:
+#       - 'Deployment/**'
+#     branches:
+#       - main
+#       - develop
 
 permissions:
   contents: read

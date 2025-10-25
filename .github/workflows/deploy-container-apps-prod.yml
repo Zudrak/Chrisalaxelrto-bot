@@ -1,12 +1,12 @@
 name: Deploy container apps
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'Src/**'
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'Src/**'
+#   workflow_dispatch:
 
 jobs:
   deploy-prod:

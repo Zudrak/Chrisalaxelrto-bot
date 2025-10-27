@@ -66,7 +66,7 @@ public class TrackMetadataService
         }
     }
 
-    public async Task<Stream?> GetStream(SourceMetadata sourceMetadata)
+    public Stream? GetStream(SourceMetadata sourceMetadata)
     {
         try
         {
@@ -76,7 +76,7 @@ public class TrackMetadataService
                 return null;
             }
 
-            return await provider.GetStream(sourceMetadata);
+            return provider.GetStream(sourceMetadata);
         }
         catch (Exception ex)
         {

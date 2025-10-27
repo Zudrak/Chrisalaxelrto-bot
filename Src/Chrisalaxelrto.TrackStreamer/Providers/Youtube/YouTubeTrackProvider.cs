@@ -96,7 +96,7 @@ public class YouTubeTrackProvider : ITrackSourceProvider
         }
     }
     
-    public async Task<Stream?> GetStream(SourceMetadata sourceMetadata)
+    public Stream? GetStream(SourceMetadata sourceMetadata)
     {
         try
         {

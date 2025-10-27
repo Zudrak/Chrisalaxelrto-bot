@@ -1,6 +1,5 @@
 using Chrisalaxelrto.Bot.Services;
 using Chrisalaxelrto.TrackStreamer.Models;
-using Chrisalaxelrto.TrackStreamer.Providers;
 using Chrisalaxelrto.TrackStreamer.Services;
 using NetCord.Services.Commands;
 
@@ -9,7 +8,7 @@ class TrackPlayerService
     private readonly TrackMetadataService trackMetadataService;
     private readonly VoiceChannelService voiceChannelService;
     private IDictionary<ulong, List<SourceMetadata>> trackQueues = new Dictionary<ulong, List<SourceMetadata>>();
-    private Action<CommandContext> nextTrackAvailableCallback;
+    private Action<CommandContext, SourceMetadata?> nextTrackAvailableCallback;
     private Task? activePlaybackTask;
 
     public TrackPlayerService(VoiceChannelService voiceChannelService, TrackMetadataService trackMetadataService)
@@ -17,9 +16,9 @@ class TrackPlayerService
         this.trackMetadataService = trackMetadataService;
         this.voiceChannelService = voiceChannelService;
 
-        this.nextTrackAvailableCallback = (CommandContext context) =>
+        nextTrackAvailableCallback = (_, _) =>
         {
-            _ = PlayTrack(context, GetNextTrack(context));
+            // Default no-op callback
         };
     }
 
@@ -48,18 +47,18 @@ class TrackPlayerService
 
         if (activePlaybackTask == null || activePlaybackTask.IsCompleted)
         {
-            await PlayTrack(context, GetNextTrack(context));
+            PlayTrack(context, GetNextTrack(context));
         }
     }
 
-    public async Task PlayTrack(CommandContext context, SourceMetadata? track)
+    public void PlayTrack(CommandContext context, SourceMetadata? track)
     {
         if (track == null)
         {
             throw new InvalidOperationException("No track to play.");
         }
 
-        var musicStream = await trackMetadataService.GetStream(track);
+        var musicStream = trackMetadataService.GetStream(track);
 
         if (musicStream != null)
         {
@@ -88,12 +87,13 @@ class TrackPlayerService
             {
                 trackQueues[context.Guild.Id].RemoveAt(0);
             }
-            
-            // Play next track if available
+
             var nextTrack = GetNextTrack(context);
+            nextTrackAvailableCallback(context, nextTrack);
+            
             if (nextTrack != null)
             {
-                await PlayTrack(context, nextTrack);
+                PlayTrack(context, nextTrack);
             }
         }
     }
@@ -114,7 +114,7 @@ class TrackPlayerService
             trackQueues[context.Guild.Id].Clear();
         }
     }
-    public void RegisterNextTrackAvailableCallback(Action<CommandContext> callback)
+    public void RegisterNextTrackAvailableCallback(Action<CommandContext, SourceMetadata?> callback)
     {
         nextTrackAvailableCallback += callback;
     }

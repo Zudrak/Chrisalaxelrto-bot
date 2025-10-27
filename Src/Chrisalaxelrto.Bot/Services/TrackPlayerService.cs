@@ -63,11 +63,11 @@ class TrackPlayerService
         if (musicStream != null)
         {
             // Store the task but don't await it here - let it run in background
-            activePlaybackTask = PlayTrackInternal(context, musicStream, track);
+            activePlaybackTask = PlayTrackInternal(context, musicStream);
         }
     }
 
-    private async Task PlayTrackInternal(CommandContext context, Stream musicStream, SourceMetadata track)
+    private async Task PlayTrackInternal(CommandContext context, Stream musicStream)
     {
         try
         {

@@ -7,21 +7,19 @@ using NetCord.Services.Commands;
 class TrackPlayerService
 {
     private readonly TrackMetadataService trackMetadataService;
-    private readonly TrackStreamProvider trackStreamProvider;
     private readonly VoiceChannelService voiceChannelService;
     private IDictionary<ulong, List<SourceMetadata>> trackQueues = new Dictionary<ulong, List<SourceMetadata>>();
     private Action<CommandContext> nextTrackAvailableCallback;
     private Task? activePlaybackTask;
 
-    public TrackPlayerService(VoiceChannelService voiceChannelService, TrackMetadataService trackMetadataService, TrackStreamProvider trackStreamProvider)
+    public TrackPlayerService(VoiceChannelService voiceChannelService, TrackMetadataService trackMetadataService)
     {
         this.trackMetadataService = trackMetadataService;
-        this.trackStreamProvider = trackStreamProvider;
         this.voiceChannelService = voiceChannelService;
 
         this.nextTrackAvailableCallback = (CommandContext context) =>
         {
-            PlayTrack(context, GetNextTrack(context));
+            _ = PlayTrack(context, GetNextTrack(context));
         };
     }
 
@@ -33,6 +31,11 @@ class TrackPlayerService
         if (sourceMetadata == null)
         {
             throw new InvalidOperationException("Track not found.");
+        }
+
+        if (context.Guild == null || context.Channel == null)
+        {
+            throw new InvalidOperationException("Guild or Channel not found.");
         }
 
         if (!trackQueues.ContainsKey(context.Guild.Id))
@@ -56,22 +59,48 @@ class TrackPlayerService
             throw new InvalidOperationException("No track to play.");
         }
 
-        var musicStream = trackStreamProvider.GetStream(track).Result;
+        var musicStream = await trackMetadataService.GetStream(track);
 
         if (musicStream != null)
         {
-            activePlaybackTask = voiceChannelService.PlayStream(context, musicStream);
-            await activePlaybackTask.ContinueWith(_ =>
+            // Store the task but don't await it here - let it run in background
+            activePlaybackTask = PlayTrackInternal(context, musicStream, track);
+        }
+    }
+
+    private async Task PlayTrackInternal(CommandContext context, Stream musicStream, SourceMetadata track)
+    {
+        try
+        {
+            await voiceChannelService.PlayStream(context, musicStream);
+        }
+        catch (Exception ex)
+        {
+            // Log or handle playback errors
+            if (context.Channel != null)
+            {
+                await context.Channel.SendMessageAsync($"Error playing track: {ex.Message}");
+            }
+        }
+        finally
+        {
+            if (context.Guild != null && trackQueues.ContainsKey(context.Guild.Id) && trackQueues[context.Guild.Id].Count > 0)
             {
                 trackQueues[context.Guild.Id].RemoveAt(0);
-                nextTrackAvailableCallback.Invoke(context);
-            });
+            }
+            
+            // Play next track if available
+            var nextTrack = GetNextTrack(context);
+            if (nextTrack != null)
+            {
+                await PlayTrack(context, nextTrack);
+            }
         }
     }
 
     public IEnumerable<SourceMetadata> GetQueue(CommandContext context)
     {
-        if (trackQueues.TryGetValue(context.Guild.Id, out var queue))
+        if (context.Guild != null && trackQueues.TryGetValue(context.Guild.Id, out var queue))
         {
             return queue;
         }
@@ -80,7 +109,7 @@ class TrackPlayerService
 
     public void ClearQueue(CommandContext context)
     {
-        if (trackQueues.ContainsKey(context.Guild.Id))
+        if (context.Guild != null && trackQueues.ContainsKey(context.Guild.Id))
         {
             trackQueues[context.Guild.Id].Clear();
         }
@@ -92,7 +121,7 @@ class TrackPlayerService
 
     private SourceMetadata? GetNextTrack(CommandContext context)
     {
-        if (trackQueues.TryGetValue(context.Guild.Id, out var queue) && queue.Count > 0)
+        if (context.Guild != null && trackQueues.TryGetValue(context.Guild.Id, out var queue) && queue.Count > 0)
         {
             var track = queue[0];
             return track;

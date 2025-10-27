@@ -66,13 +66,31 @@ public class TrackMetadataService
         }
     }
 
+    public async Task<Stream?> GetStream(SourceMetadata sourceMetadata)
+    {
+        try
+        {
+            var provider = providers.FirstOrDefault(p => p.Source == sourceMetadata.TrackMetadata.Source);
+            if (provider == null)
+            {
+                return null;
+            }
+
+            return await provider.GetStream(sourceMetadata);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting stream for URL: {Url}", sourceMetadata.StreamUrl);
+            return null;
+        }
+    }
     public async Task<IEnumerable<TrackMetadata>> SearchAsync(string query, TrackSource? source = null, int maxResults = 10)
     {
         var providers = source == null ? this.providers : this.providers.Where(p => p.Source == source);
 
         var tasks = providers.Select(p => p.SearchAsync(query, maxResults));
         var results = await Task.WhenAll(tasks);
-        
+
         return results.SelectMany(r => r).Take(maxResults);
     }
 

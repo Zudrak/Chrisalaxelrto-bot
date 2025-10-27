@@ -18,7 +18,6 @@ static class PorebazuExtensions
     {
         services.AddTransient<ITrackSourceProvider, YouTubeTrackProvider>();
         services.AddScoped<TrackMetadataService>();
-        services.AddHttpClient<TrackStreamProvider>();
         services.AddSingleton<VoiceChannelService>();
         services.AddSingleton<TrackPlayerService>();
         return services;

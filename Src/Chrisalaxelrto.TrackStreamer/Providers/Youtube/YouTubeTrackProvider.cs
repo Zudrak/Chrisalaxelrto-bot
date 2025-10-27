@@ -1,5 +1,6 @@
 namespace Chrisalaxelrto.TrackStreamer.Providers.Youtube;
 
+using System.IO.Pipelines;
 using System.Net.Http.Headers;
 using Chrisalaxelrto.TrackStreamer.Models;
 using Microsoft.AspNetCore.StaticFiles;
@@ -31,11 +32,12 @@ public class YouTubeTrackProvider : ITrackSourceProvider
         {
             UseCookies = true,
         };
-        
+
         var httpClient = new HttpClient(httpClientHandler)
-        { 
+        {
             Timeout = TimeSpan.FromSeconds(200)
         };
+        
         youtubeClient = new YoutubeClient(httpClient);
         this.logger = logger;
         logger.LogInformation("YouTubeMusicProvider initialized.");
@@ -57,7 +59,7 @@ public class YouTubeTrackProvider : ITrackSourceProvider
 
             var video = await youtubeClient.Videos.GetAsync(url.ToString());
             var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(url.ToString());
-            
+
             var audioStreamInfo = GetBestAudioStream(streamManifest, quality);
             if (audioStreamInfo == null)
             {
@@ -70,19 +72,22 @@ public class YouTubeTrackProvider : ITrackSourceProvider
             {
                 logger.LogWarning("Failed to convert video metadata for video: {VideoId}", video.Id);
                 return null;
-            } 
+            }
 
             if (!new FileExtensionContentTypeProvider().TryGetContentType($".{audioStreamInfo.Container.Name}", out var contentType))
             {
                 return null;
             }
 
-            return new SourceMetadata
+            var sourceMetadata = new SourceMetadata
             {
                 ContentType = new MediaTypeHeaderValue(contentType),
-                StreamUrl = audioStreamInfo.Url,
-                TrackMetadata = metadata
+                StreamUrl = new Uri(audioStreamInfo.Url),
+                TrackMetadata = metadata,
+                ProviderSpecificMetadata = audioStreamInfo
             };
+
+            return sourceMetadata;
         }
         catch (Exception ex)
         {
@@ -91,6 +96,39 @@ public class YouTubeTrackProvider : ITrackSourceProvider
         }
     }
     
+    public async Task<Stream?> GetStream(SourceMetadata sourceMetadata)
+    {
+        try
+        {
+            var streamInfo = sourceMetadata.ProviderSpecificMetadata as IStreamInfo;
+            if (streamInfo == null)
+            {
+                logger.LogWarning("No suitable audio stream found for URL: {Url}", sourceMetadata.StreamUrl);
+                return null;
+            }
+
+            var pipe = new Pipe();
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await youtubeClient.Videos.Streams.CopyToAsync(streamInfo, pipe.Writer.AsStream());
+                        await pipe.Writer.CompleteAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await pipe.Writer.CompleteAsync(ex);
+                        logger.LogError(ex, "Error streaming audio for URL: {Url}", sourceMetadata.StreamUrl);
+                    }
+                });
+            return pipe.Reader.AsStream();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting stream for URL: {Url}", sourceMetadata.StreamUrl);
+            return null;
+        }
+    }
     public async Task<TrackMetadata?> GetTrackMetadata(Uri url)
     {
         try

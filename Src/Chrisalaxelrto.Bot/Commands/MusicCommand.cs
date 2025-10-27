@@ -16,8 +16,13 @@ class MusicCommand : CommandModule<CommandContext>
     {
         try
         {
+            if (Context.Channel == null || Context.Guild == null)
+            {
+                throw new InvalidOperationException("This command can only be used in a guild channel.");
+            }
+            
             await Context.Channel.TriggerTypingStateAsync();
-            trackPlayerService.EnqueueTrack(Context, searchQuery);
+            await trackPlayerService.EnqueueTrack(Context, searchQuery);
         }
         catch (Exception ex)
         {

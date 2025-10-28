@@ -32,17 +32,10 @@ builder.Configuration.SetBasePath(configBasePath)
     .AddCommandLine(args)
     .Build();
 
-var token = builder.Configuration["BotToken"];
-
-if (string.IsNullOrEmpty(token))
-{
-    throw new InvalidOperationException("Bot token is not configured. Please set the \"BotToken\" variable in appsettings.json or environment.");
-}
-
 builder.Services
     .AddDiscordGateway(config =>
     {
-        config.Token = token;
+        config.Token = builder.Configuration["BotToken"];
         config.Intents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent | GatewayIntents.GuildVoiceStates;
     })
     .AddCommands()

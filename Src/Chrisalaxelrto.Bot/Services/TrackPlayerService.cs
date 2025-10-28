@@ -27,8 +27,6 @@ class TrackPlayerService
 
     public async Task<SourceMetadata?> EnqueueTrack(CommandContext context, string searchQuery)
     {
-        ValidateContext(context);
-
         var sourceMetadata = await trackMetadataService.GetSourceMetadata(searchQuery);
         if (sourceMetadata == null)
         {
@@ -148,18 +146,4 @@ class TrackPlayerService
         }
         return null;
     }   
-
-    private void ValidateContext(CommandContext context)
-    {
-        if (context.Guild == null)
-        {
-            throw new InvalidOperationException("Guild not found. Ensure the command is used in a guild context.");
-        }
-
-        if (context.Channel == null)
-        {
-            throw new InvalidOperationException("Channel not found. Ensure the command is used in a guild context.");
-        }
-
-    }
 }

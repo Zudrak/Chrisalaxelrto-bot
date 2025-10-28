@@ -20,9 +20,72 @@ class MusicCommand : CommandModule<CommandContext>
             {
                 throw new InvalidOperationException("This command can only be used in a guild channel.");
             }
-            
+
             await Context.Channel.TriggerTypingStateAsync();
-            await trackPlayerService.EnqueueTrack(Context, searchQuery);
+            var sourceMetadata = await trackPlayerService.EnqueueTrack(Context, searchQuery);
+            if (sourceMetadata == null)
+            {
+                await ReplyAsync($"Track not found.");
+                return;
+            }
+            
+            await ReplyAsync($"Playing {sourceMetadata?.TrackMetadata.Title} - {sourceMetadata?.TrackMetadata.Artist}");
+        }
+        catch (Exception ex)
+        {
+            await ReplyAsync($"{ex.Message}");
+        }
+    }
+
+    [Command("pause")]
+    public async Task PauseMusic()
+    {
+        try
+        {
+            if (Context.Channel == null || Context.Guild == null)
+            {
+                throw new InvalidOperationException("This command can only be used in a guild channel.");
+            }
+
+            await Context.Channel.TriggerTypingStateAsync();
+            trackPlayerService.SetPaused(Context, true);
+        }
+        catch (Exception ex)
+        {
+            await ReplyAsync($"{ex.Message}");
+        }
+    }
+
+    [Command("resume")]
+    public async Task ResumeMusic()
+    {
+        try
+        {
+            if (Context.Channel == null || Context.Guild == null)
+            {
+                throw new InvalidOperationException("This command can only be used in a guild channel.");
+            }
+
+            await Context.Channel.TriggerTypingStateAsync();
+            trackPlayerService.SetPaused(Context, false);
+        }
+        catch (Exception ex)
+        {
+            await ReplyAsync($"{ex.Message}");
+        }
+    }
+    
+    [Command("stop")]
+    public async Task StopMusic()
+    {
+        try
+        {
+            if (Context.Channel == null || Context.Guild == null)
+            {
+                throw new InvalidOperationException("This command can only be used in a guild channel.");
+            }
+
+            trackPlayerService.StopPlayback(Context);
         }
         catch (Exception ex)
         {

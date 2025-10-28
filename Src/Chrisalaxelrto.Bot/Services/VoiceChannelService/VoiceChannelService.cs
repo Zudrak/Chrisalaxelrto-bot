@@ -3,13 +3,13 @@ using FFMpegCore.Pipes;
 using NetCord.Gateway;
 using NetCord.Gateway.Voice;
 using NetCord.Services.Commands;
-using System.Diagnostics;
 
 namespace Chrisalaxelrto.Bot.Services;
 
 class VoiceChannelService
 {
     private IDictionary<ulong, VoiceClient> voiceClients = new Dictionary<ulong, VoiceClient>();
+    private IDictionary<ulong, PausableStream> pausableStreams = new Dictionary<ulong, PausableStream>();
 
     public bool IsInVoiceChannel(CommandContext context)
     {
@@ -19,6 +19,20 @@ class VoiceChannelService
             throw new InvalidOperationException("Guild not found. Ensure the command is used in a guild context.");
         }
         return voiceClients.ContainsKey(guild.Id);
+    }
+
+    public void SetPaused(CommandContext context, bool isPaused)
+    {
+        var guild = context.Guild;
+        if (guild == null)
+        {
+            throw new InvalidOperationException("Guild not found. Ensure the command is used in a guild context.");
+        }
+
+        if (pausableStreams.TryGetValue(guild.Id, out var pausableStream))
+        {
+            pausableStream.IsPaused = isPaused;
+        }
     }
 
     public async Task JoinVoiceChannel(CommandContext context, VoiceClientConfiguration? config = null)
@@ -67,9 +81,16 @@ class VoiceChannelService
             await context.Client.UpdateVoiceStateAsync(new VoiceStateProperties(guild.Id, null));
             voiceClients.Remove(guild.Id);
         }
+
+        // Clean up pausable stream
+        if (pausableStreams.TryGetValue(guild.Id, out var pausableStream))
+        {
+            await pausableStream.DisposeAsync();
+            pausableStreams.Remove(guild.Id);
+        }
     }
 
-    public async Task PlayStream(CommandContext context, Stream sourceStream)
+    public async Task PlayStream(CommandContext context, Stream sourceStream, CancellationToken cancellationToken = default)
     {
         var guild = context.Guild;
         if (guild == null)
@@ -84,28 +105,40 @@ class VoiceChannelService
         }
 
         var outputStream = voiceClient.CreateOutputStream();
-        OpusEncodeStream stream = new(outputStream, PcmFormat.Short, VoiceChannels.Stereo, OpusApplication.Audio);
+
+        // Wrap the OpusEncodeStream in a PausableStream
+        OpusEncodeStream opusStream = new(outputStream, PcmFormat.Short, VoiceChannels.Stereo, OpusApplication.Audio);
+        PausableStream pausableStream = new(opusStream);
+        
+        // Store the pausable stream so we can control it later
+        if (pausableStreams.ContainsKey(guild.Id))
+        {
+            await pausableStreams[guild.Id].DisposeAsync();
+        }
+        pausableStreams[guild.Id] = pausableStream;
 
         try
         {
             // Use FFMpegCore to process the audio stream
             await FFMpegArguments
                 .FromPipeInput(new StreamPipeSource(sourceStream))
-                .OutputToPipe(new StreamPipeSink(stream), options => options
+                .OutputToPipe(new StreamPipeSink(pausableStream), options => options
                     .WithAudioCodec("pcm_s16le")
                     .WithAudioSamplingRate(48000)
                     .ForceFormat("s16le")
                     .WithCustomArgument("-ac 2")
                     .WithCustomArgument("-loglevel -8"))
+                .CancellableThrough(cancellationToken)
                 .ProcessAsynchronously();
 
-            // Flush the opus stream to ensure all audio data is sent
-            await stream.FlushAsync();
+            // Flush the pausable stream to ensure all audio data is sent
+            await pausableStream.FlushAsync(cancellationToken);
         }
         finally
         {
-            // Dispose the opus stream
-            await stream.DisposeAsync();
+            // Dispose the pausable stream
+            await pausableStream.DisposeAsync();
+            pausableStreams.Remove(guild.Id);
         }
     }
 

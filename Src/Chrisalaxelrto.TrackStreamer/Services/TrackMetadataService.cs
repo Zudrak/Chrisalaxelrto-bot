@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Chrisalaxelrto.TrackStreamer.Models;
 using Chrisalaxelrto.TrackStreamer.Providers;
 using Microsoft.Extensions.Logging;
@@ -66,7 +67,7 @@ public class TrackMetadataService
         }
     }
 
-    public Stream? GetStream(SourceMetadata sourceMetadata)
+    public async Task<Stream?> GetStream(SourceMetadata sourceMetadata)
     {
         try
         {
@@ -76,7 +77,7 @@ public class TrackMetadataService
                 return null;
             }
 
-            return provider.GetStream(sourceMetadata);
+            return await provider.GetStream(sourceMetadata);
         }
         catch (Exception ex)
         {

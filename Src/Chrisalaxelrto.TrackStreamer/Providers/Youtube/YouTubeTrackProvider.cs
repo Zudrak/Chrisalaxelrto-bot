@@ -2,6 +2,7 @@ namespace Chrisalaxelrto.TrackStreamer.Providers.Youtube;
 
 using System.IO.Pipelines;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Chrisalaxelrto.TrackStreamer.Models;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
@@ -96,7 +97,7 @@ public class YouTubeTrackProvider : ITrackSourceProvider
         }
     }
     
-    public Stream? GetStream(SourceMetadata sourceMetadata)
+    public async Task<Stream?> GetStream(SourceMetadata sourceMetadata)
     {
         try
         {
@@ -107,21 +108,7 @@ public class YouTubeTrackProvider : ITrackSourceProvider
                 return null;
             }
 
-            var pipe = new Pipe();
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await youtubeClient.Videos.Streams.CopyToAsync(streamInfo, pipe.Writer.AsStream());
-                        await pipe.Writer.CompleteAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        await pipe.Writer.CompleteAsync(ex);
-                        logger.LogError(ex, "Error streaming audio for URL: {Url}", sourceMetadata.StreamUrl);
-                    }
-                });
-            return pipe.Reader.AsStream();
+            return await youtubeClient.Videos.Streams.GetAsync(streamInfo);
         }
         catch (Exception ex)
         {

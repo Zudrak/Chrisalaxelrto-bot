@@ -1,3 +1,4 @@
+
 using Chrisalaxelrto.Bot.Services;
 using Chrisalaxelrto.TrackStreamer.Models;
 using Chrisalaxelrto.TrackStreamer.Services;
@@ -8,6 +9,8 @@ class TrackPlayerService
     private readonly TrackMetadataService trackMetadataService;
     private readonly VoiceChannelService voiceChannelService;
     private IDictionary<ulong, List<SourceMetadata>> trackQueues = new Dictionary<ulong, List<SourceMetadata>>();
+    private IDictionary<ulong, Stream> trackStreams = new Dictionary<ulong, Stream>();
+
     private Action<CommandContext, SourceMetadata?> nextTrackAvailableCallback;
     private Task? activePlaybackTask;
 
@@ -22,7 +25,7 @@ class TrackPlayerService
         };
     }
 
-    public async Task EnqueueTrack(CommandContext context, string searchQuery)
+    public async Task<SourceMetadata?> EnqueueTrack(CommandContext context, string searchQuery)
     {
         ValidateContext(context);
 
@@ -42,29 +45,46 @@ class TrackPlayerService
             trackQueues[context.Guild.Id] = new List<SourceMetadata>();
         }
 
-        await context.Channel.SendMessageAsync($"Enqueued: {sourceMetadata.TrackMetadata.Title}");
         trackQueues[context.Guild.Id].Add(sourceMetadata);
 
         if (activePlaybackTask == null || activePlaybackTask.IsCompleted)
         {
-            PlayTrack(context, GetNextTrack(context));
+            _ = PlayTrack(context, GetNextTrack(context));
         }
+        return sourceMetadata;
     }
 
-    public void PlayTrack(CommandContext context, SourceMetadata? track)
+    public async Task PlayTrack(CommandContext context, SourceMetadata? track)
     {
         if (track == null)
         {
             throw new InvalidOperationException("No track to play.");
         }
 
-        var musicStream = trackMetadataService.GetStream(track);
+        var musicStream = await trackMetadataService.GetStream(track);
 
         if (musicStream != null)
-        {
+        {   
+            trackStreams.TryGetValue(context.Guild!.Id, out var guildStream);
+            if (guildStream != null)
+            {
+                await guildStream.DisposeAsync();
+            }
+
+            trackStreams[context.Guild.Id] = musicStream;
             // Store the task but don't await it here - let it run in background
             activePlaybackTask = PlayTrackInternal(context, musicStream);
         }
+    }
+
+    public void SetPaused(CommandContext context, bool isPaused)
+    {
+        voiceChannelService.SetPaused(context, isPaused);
+    }
+
+    public void StopPlayback(CommandContext context)
+    {
+        _ = voiceChannelService.LeaveVoiceChannel(context);
     }
 
     private async Task PlayTrackInternal(CommandContext context, Stream musicStream)
@@ -93,7 +113,7 @@ class TrackPlayerService
             
             if (nextTrack != null)
             {
-                PlayTrack(context, nextTrack);
+                await PlayTrack(context, nextTrack);
             }
         }
     }

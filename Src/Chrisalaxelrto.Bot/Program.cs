@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using NetCord.Hosting.Services.Commands;
 using Chrisalaxelrto.Bot.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Chrisalaxelrto.Bot.Services;
 
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -15,11 +16,20 @@ var isLocal = string.IsNullOrEmpty(env);
 var configFile = isLocal ? "appsettings.json" : $"appsettings.{env}.json";
 var configBasePath = isLocal ? Directory.GetCurrentDirectory() : Directory.GetCurrentDirectory();
 
+var secretStorage = new SecretStorageService();
+
+if (!secretStorage.AreAllSecretsLoaded())
+{
+    secretStorage.RequestSecretsFromConsole();
+}
+
 // Explicitly set up configuration
 builder.Configuration.SetBasePath(configBasePath)
     .AddJsonFile("base.appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile(configFile, optional: false, reloadOnChange: true)
     .AddEnvironmentVariables()
+    .AddSecretStorage(secretStorage)
+    .AddCommandLine(args)
     .Build();
 
 var token = builder.Configuration["BotToken"];

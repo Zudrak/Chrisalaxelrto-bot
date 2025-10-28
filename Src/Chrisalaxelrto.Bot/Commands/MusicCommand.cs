@@ -47,7 +47,6 @@ class MusicCommand : CommandModule<CommandContext>
                 throw new InvalidOperationException("This command can only be used in a guild channel.");
             }
 
-            await Context.Channel.TriggerTypingStateAsync();
             trackPlayerService.SetPaused(Context, true);
         }
         catch (Exception ex)
@@ -66,7 +65,6 @@ class MusicCommand : CommandModule<CommandContext>
                 throw new InvalidOperationException("This command can only be used in a guild channel.");
             }
 
-            await Context.Channel.TriggerTypingStateAsync();
             trackPlayerService.SetPaused(Context, false);
         }
         catch (Exception ex)
